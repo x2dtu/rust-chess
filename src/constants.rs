@@ -10,3 +10,5 @@ pub const PIECES: &'static [Piece] = &[
     Piece::Queen,
     Piece::King,
 ];
+
+pub const OPENING_BOOK_FILE_NAME: &str = "Book.txt";

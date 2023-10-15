@@ -41,9 +41,8 @@ fn search(
     let mut beta = beta_p;
     if depth == 0 {
         let hash = board.get_hash();
-        let evaluation_option = transposition_table.get(hash);
-        if evaluation_option.is_some() {
-            return (evaluation_option.unwrap(), None);
+        if let Some(evaluation) = transposition_table.get(hash) {
+            return (evaluation, None);
         } else {
             let evaluation = board_eval(board, !maximizing_player);
             transposition_table.add(board.get_hash(), evaluation);
