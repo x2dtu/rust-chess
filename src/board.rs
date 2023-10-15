@@ -1,8 +1,12 @@
-use crate::square::Square;
+use std::collections::HashSet;
+use std::str::FromStr;
+
+use crate::square::SquareComp;
+use chess::{Board, MoveGen, Square};
 use yew::prelude::*;
 
 #[derive(Properties, Clone, PartialEq)]
-pub struct BoardProps {
+pub struct BoardCompProps {
     pub fen: String,
 }
 
@@ -41,9 +45,25 @@ fn parse_fen(fen: &str) -> Vec<Option<&str>> {
     result
 }
 
-#[function_component(Board)]
-pub fn board(props: &BoardProps) -> Html {
+#[function_component(BoardComp)]
+pub fn board(props: &BoardCompProps) -> Html {
     let board_vec = parse_fen(&props.fen);
+    let selected = use_state(|| None);
+    let set_selected = {
+        let selected = selected.clone();
+        Callback::from(move |new_selected| selected.set(new_selected))
+    };
+    let board = Board::from_str(&props.fen).unwrap();
+    let mut moves = HashSet::new();
+
+    if selected.is_some() {
+        let square: Square = selected.unwrap();
+        for legal_move in MoveGen::new_legal(&board) {
+            if legal_move.get_source() == square {
+                moves.insert(legal_move.get_dest());
+            }
+        }
+    }
 
     html! {
         <div
@@ -53,11 +73,24 @@ pub fn board(props: &BoardProps) -> Html {
             let carry = if (index / 8) % 2 == 1 {1} else {0};
             let color = if (index - carry) % 2 == 0 { "light" } else { "dark" };
             let piece_prop = piece.map(|p| p.to_string()); // Convert Option<&str> to Option<String>
+
+            // get the square
+            let file_index = index % 8;
+            let rank_index = 7 - (index / 8);
+            let algebraic = format!(
+                "{}{}",
+                (file_index + 'a' as usize) as u8 as char,
+                (rank_index + '1' as usize) as u8 as char
+            );
+            let square = Square::from_str(&algebraic).unwrap();
+            let can_move_to = moves.contains(&square);
+
             match piece {
-                Some(_) => html!{<Square color={color} piece={piece_prop}/>},
-                None => html!{<Square color={color} piece={piece_prop}/>}
+                Some(_) => html!{<SquareComp color={color} piece={piece_prop} set_selected={set_selected.clone()} can_move_to={can_move_to} square={square}/>},
+                None => html!{<SquareComp color={color} piece={piece_prop} set_selected={set_selected.clone()} can_move_to={can_move_to} square={square}/>}
             }
         }) }
         </div>
     }
 }
+// bit_square={bit_square} selected={selected_local} can_move_to={false}

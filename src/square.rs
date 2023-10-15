@@ -1,16 +1,28 @@
+use chess::Square;
 use gloo_console::log;
 use wasm_bindgen::JsValue;
 use yew::prelude::*;
 
 #[derive(Properties, Clone, PartialEq)]
-pub struct SquareProps {
+pub struct SquareCompProps {
     pub color: String,
     pub piece: Option<String>,
+    pub can_move_to: bool,
+    pub square: Square,
+    pub set_selected: Callback<Option<Square>>,
 }
 
-#[function_component(Square)]
-pub fn square(props: &SquareProps) -> Html {
-    let click_handler = Callback::from(|_| {
+#[function_component(SquareComp)]
+pub fn square(props: &SquareCompProps) -> Html {
+    let props_copy = props.clone();
+    let click_handler = Callback::from(move |_| {
+        if !props_copy.can_move_to && props_copy.piece.is_some() {
+            props_copy.set_selected.emit(Some(props_copy.square));
+            // props.set_selected(props.piece.unwrap());
+        } else if props_copy.piece.is_some() {
+        } else {
+            props_copy.set_selected.emit(None);
+        }
         let object = JsValue::from("hello world");
         log!("Hello", object);
     });
@@ -25,6 +37,11 @@ pub fn square(props: &SquareProps) -> Html {
     } else {
         html! {}
     };
+    let move_circle = if props.can_move_to {
+        html! { <div class="move-circle"></div> }
+    } else {
+        html! {}
+    };
 
     html! {
         <div
@@ -32,6 +49,7 @@ pub fn square(props: &SquareProps) -> Html {
             style={format!("background-color: {};", bg_color)}
             onclick={click_handler}
         >
+        {move_circle}
         {image_element}
         </div>
     }
