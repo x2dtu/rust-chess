@@ -1,5 +1,7 @@
 mod app;
 mod board;
+pub mod bot;
+pub mod constants;
 mod square;
 
 use app::App;

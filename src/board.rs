@@ -1,8 +1,8 @@
 use std::collections::HashSet;
 use std::str::FromStr;
 
-use crate::square::SquareComp;
-use chess::{Board, ChessMove, Color, File, MoveGen, Rank, Square};
+use crate::{bot::choose_move, square::SquareComp};
+use chess::{Board, ChessMove, Color, File, MoveGen, Piece, Rank, Square};
 use yew::prelude::*;
 
 fn parse_board(board: &Board) -> Vec<Option<&str>> {
@@ -55,7 +55,13 @@ pub fn board() -> Html {
         Callback::from(move |new_target| target.set(new_target))
     };
     if (*target).is_some() && (*selected).is_some() {
-        let new_move = ChessMove::new(selected.unwrap(), target.unwrap(), None);
+        let mut new_move = ChessMove::new(selected.unwrap(), target.unwrap(), None);
+        if target.unwrap().get_rank() == Rank::Eighth
+            && board.piece_on(selected.unwrap()).unwrap() == Piece::Pawn
+        {
+            // then we are promoting a pawn. lets just auto queen for now
+            new_move = ChessMove::new(selected.unwrap(), target.unwrap(), Some(Piece::Queen));
+        }
         let mut board_copy = (*board).clone();
         board.make_move(new_move, &mut board_copy);
         board.set(board_copy);
@@ -64,10 +70,9 @@ pub fn board() -> Html {
         selected.set(None);
         target.set(None);
     } else if board.side_to_move() == Color::Black {
-        // ai chooses a move
-        let best_move = MoveGen::new_legal(&board).next();
-        if best_move.is_some() {
-            let ai_move = best_move.unwrap();
+        let ai_move = choose_move(&board);
+        if ai_move.is_some() {
+            let ai_move = ai_move.unwrap();
             let mut board_copy = (*board).clone();
             board.make_move(ai_move, &mut board_copy);
             board.set(board_copy);
@@ -114,4 +119,3 @@ pub fn board() -> Html {
         </div>
     }
 }
-// bit_square={bit_square} selected={selected_local} can_move_to={false}

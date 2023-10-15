@@ -1,6 +1,6 @@
 use chess::Square;
-use gloo_console::log;
-use wasm_bindgen::JsValue;
+// use gloo_console::log;
+// use wasm_bindgen::JsValue;
 use yew::prelude::*;
 
 #[derive(Properties, Clone, PartialEq)]
@@ -24,8 +24,8 @@ pub fn square(props: &SquareCompProps) -> Html {
         } else {
             props_copy.set_selected.emit(None);
         }
-        let object = JsValue::from("hello world");
-        log!("Hello", object);
+        // let object = JsValue::from("hello world");
+        // log!("Hello", object);
     });
     let bg_color = if props.color == "light" {
         "#f2e1c3"
