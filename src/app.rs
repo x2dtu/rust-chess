@@ -6,7 +6,7 @@ use crate::board::BoardComp;
 pub fn app() -> Html {
     html! {
         <main>
-            <BoardComp fen="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"/>
+            <BoardComp/>
         </main>
     }
 }

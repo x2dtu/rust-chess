@@ -10,6 +10,7 @@ pub struct SquareCompProps {
     pub can_move_to: bool,
     pub square: Square,
     pub set_selected: Callback<Option<Square>>,
+    pub set_target: Callback<Option<Square>>,
 }
 
 #[function_component(SquareComp)]
@@ -18,8 +19,8 @@ pub fn square(props: &SquareCompProps) -> Html {
     let click_handler = Callback::from(move |_| {
         if !props_copy.can_move_to && props_copy.piece.is_some() {
             props_copy.set_selected.emit(Some(props_copy.square));
-            // props.set_selected(props.piece.unwrap());
-        } else if props_copy.piece.is_some() {
+        } else if props_copy.can_move_to {
+            props_copy.set_target.emit(Some(props_copy.square));
         } else {
             props_copy.set_selected.emit(None);
         }

@@ -2,22 +2,25 @@ use std::collections::HashSet;
 use std::str::FromStr;
 
 use crate::square::SquareComp;
-use chess::{Board, MoveGen, Square};
+use chess::{Board, ChessMove, File, MoveGen, Rank, Square};
 use yew::prelude::*;
 
-#[derive(Properties, Clone, PartialEq)]
-pub struct BoardCompProps {
-    pub fen: String,
-}
-
-fn parse_fen(fen: &str) -> Vec<Option<&str>> {
+fn parse_board(board: &Board) -> Vec<Option<&str>> {
     let mut result = Vec::new();
 
     // Split the FEN string by spaces and get the piece placement part
-    let fen_parts: Vec<&str> = fen.split(' ').collect();
-    if let Some(piece_placement) = fen_parts.get(0) {
-        // Iterate over the characters in the piece placement part
-        for c in piece_placement.chars() {
+    for rank in (0..8).rev() {
+        for file in 0..8 {
+            let mut c = '0';
+            let square = Square::make_square(Rank::from_index(rank), File::from_index(file));
+            if board.piece_on(square).is_some() {
+                let p = board.piece_on(square).unwrap();
+                c = p
+                    .to_string(board.color_on(square).unwrap())
+                    .chars()
+                    .next()
+                    .unwrap();
+            }
             match c {
                 'r' => result.push(Some("img/72x72blackrook.png")),
                 'n' => result.push(Some("img/72x72blackknight.png")),
@@ -31,29 +34,49 @@ fn parse_fen(fen: &str) -> Vec<Option<&str>> {
                 'Q' => result.push(Some("img/72x72queen.png")),
                 'K' => result.push(Some("img/72x72king.png")),
                 'P' => result.push(Some("img/72x72pawn.png")),
-                '1'..='8' => {
-                    let num = c.to_digit(10).unwrap_or(1) as usize;
-                    for _ in 0..num {
-                        result.push(None);
-                    }
-                }
-                _ => {}
+                _ => result.push(None),
             }
         }
     }
-
     result
 }
 
 #[function_component(BoardComp)]
-pub fn board(props: &BoardCompProps) -> Html {
-    let board_vec = parse_fen(&props.fen);
+pub fn board() -> Html {
+    let board = use_state(|| Board::default());
     let selected = use_state(|| None);
+    let target = use_state(|| None);
     let set_selected = {
         let selected = selected.clone();
         Callback::from(move |new_selected| selected.set(new_selected))
     };
-    let board = Board::from_str(&props.fen).unwrap();
+    let set_target = {
+        let target = target.clone();
+        Callback::from(move |new_target| target.set(new_target))
+    };
+    if (*target).is_some() && (*selected).is_some() {
+        let new_move = ChessMove::new(selected.unwrap(), target.unwrap(), None);
+        let mut board_copy = (*board).clone();
+        board.make_move(new_move, &mut board_copy);
+        board.set(board_copy.null_move().unwrap());
+
+        // unset the move and selection
+        selected.set(None);
+        target.set(None);
+    }
+    // use_effect_with_deps(
+    //     move |_| {
+    //         if target.is_some() && selected.is_some() {
+    //             let mut board = Board::from_str(&fen).unwrap();
+    //             let new_move = ChessMove::new(selected.unwrap(), target.unwrap(), None);
+    //             board.make_move(new_move, &mut board);
+    //             fen.set(board.)
+    //         }
+    //     },
+    //     target,
+    // );
+
+    let board_vec = parse_board(&board);
     let mut moves = HashSet::new();
 
     if selected.is_some() {
@@ -86,8 +109,8 @@ pub fn board(props: &BoardCompProps) -> Html {
             let can_move_to = moves.contains(&square);
 
             match piece {
-                Some(_) => html!{<SquareComp color={color} piece={piece_prop} set_selected={set_selected.clone()} can_move_to={can_move_to} square={square}/>},
-                None => html!{<SquareComp color={color} piece={piece_prop} set_selected={set_selected.clone()} can_move_to={can_move_to} square={square}/>}
+                Some(_) => html!{<SquareComp color={color} piece={piece_prop} set_selected={set_selected.clone()} set_target={set_target.clone()} can_move_to={can_move_to} square={square}/>},
+                None => html!{<SquareComp color={color} piece={piece_prop} set_selected={set_selected.clone()} set_target={set_target.clone()} can_move_to={can_move_to} square={square}/>}
             }
         }) }
         </div>
