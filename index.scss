@@ -13,27 +13,6 @@ body {
   font-size: 1.5rem;
 }
 
-main {
-  color: #fff6d5;
-  font-family: sans-serif;
-  text-align: center;
-}
-
-.logo {
-  height: 20em;
-}
-
-.heart:after {
-  content: "❤️";
-
-  font-size: 1.75em;
-}
-
-h1 + .subtitle {
-  display: block;
-  margin-top: -1em;
-}
-
 .square {
   width: 80px;
   height: 80px;
@@ -55,7 +34,7 @@ main {
   height: 100vh;
   display: flex;
   justify-content: center;
-  padding-top: 2em;
+  align-items: center;
 }
 
 .move-circle {
