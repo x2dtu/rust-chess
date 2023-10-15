@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::str::FromStr;
 
 use crate::square::SquareComp;
-use chess::{Board, ChessMove, File, MoveGen, Rank, Square};
+use chess::{Board, ChessMove, Color, File, MoveGen, Rank, Square};
 use yew::prelude::*;
 
 fn parse_board(board: &Board) -> Vec<Option<&str>> {
@@ -58,23 +58,21 @@ pub fn board() -> Html {
         let new_move = ChessMove::new(selected.unwrap(), target.unwrap(), None);
         let mut board_copy = (*board).clone();
         board.make_move(new_move, &mut board_copy);
-        board.set(board_copy.null_move().unwrap());
+        board.set(board_copy);
 
         // unset the move and selection
         selected.set(None);
         target.set(None);
+    } else if board.side_to_move() == Color::Black {
+        // ai chooses a move
+        let best_move = MoveGen::new_legal(&board).next();
+        if best_move.is_some() {
+            let ai_move = best_move.unwrap();
+            let mut board_copy = (*board).clone();
+            board.make_move(ai_move, &mut board_copy);
+            board.set(board_copy);
+        }
     }
-    // use_effect_with_deps(
-    //     move |_| {
-    //         if target.is_some() && selected.is_some() {
-    //             let mut board = Board::from_str(&fen).unwrap();
-    //             let new_move = ChessMove::new(selected.unwrap(), target.unwrap(), None);
-    //             board.make_move(new_move, &mut board);
-    //             fen.set(board.)
-    //         }
-    //     },
-    //     target,
-    // );
 
     let board_vec = parse_board(&board);
     let mut moves = HashSet::new();
