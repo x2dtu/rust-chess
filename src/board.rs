@@ -47,7 +47,7 @@ pub fn board() -> Html {
     let board = use_state(|| Board::default());
     let selected = use_state(|| None);
     let target = use_state(|| None);
-    let in_opening_book = use_state(|| false);
+    let in_opening_book = use_state(|| true);
     let set_selected = {
         let selected = selected.clone();
         Callback::from(move |new_selected| selected.set(new_selected))
