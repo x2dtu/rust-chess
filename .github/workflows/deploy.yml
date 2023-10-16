@@ -19,7 +19,7 @@ jobs:
           toolchain: stable
 
       - name: Install Dependencies
-        run: cargo install trunk wasm-bindgen-cli
+        run: cargo install trunk wasm-bindgen-cli && rustup target add wasm32-unknown-unknown
 
       - name: Build Yew App
         run: trunk build --release
