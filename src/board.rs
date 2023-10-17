@@ -3,8 +3,11 @@ use std::collections::HashSet;
 use std::str::FromStr;
 use wasm_bindgen::JsCast;
 
-use crate::{bot::choose_move, opening_book::opening_book_move, square::SquareComp};
-use chess::{Board, BoardStatus, ChessMove, Color, File, MoveGen, Piece, Rank, Square};
+use crate::{
+    bot::choose_move, game_over_screen::GameOverScreen, opening_book::opening_book_move,
+    square::SquareComp,
+};
+use chess::{Board, BoardStatus, ChessMove, Color, File, Game, MoveGen, Piece, Rank, Square};
 use web_sys::HtmlAudioElement;
 use yew::prelude::*;
 
@@ -114,12 +117,13 @@ fn parse_board(board: &Board) -> Vec<Option<&str>> {
 
 #[function_component(BoardComp)]
 pub fn board() -> Html {
-    let board = use_state_eq(|| Board::default());
+    let game = use_state(|| Game::new());
     let move_ply = use_state(|| 0);
     let selected = use_state(|| None);
     let target = use_state(|| None);
     let in_opening_book = use_state(|| true);
-    let mut board_copy: Board = (*board).clone();
+    let board = game.current_position();
+    let mut board_copy: Board = board.clone();
     let set_selected = {
         let selected = selected.clone();
         Callback::from(move |new_selected| selected.set(new_selected))
@@ -139,7 +143,7 @@ pub fn board() -> Html {
         play_move_sound(&board_copy, &new_move, false);
         board.make_move(new_move, &mut board_copy);
 
-        board.set(board_copy.clone());
+        game.set(Game::new_with_board(board_copy));
         move_ply.set(*move_ply + 1);
 
         // unset the move and selection
@@ -171,15 +175,16 @@ pub fn board() -> Html {
                     board.make_move(ai_move, &mut board_copy);
                 }
             }
-            board.set(board_copy.clone());
+            game.set(Game::new_with_board(board_copy));
             move_ply.set(*move_ply + 1);
         });
         timeout.forget();
     }
 
     let board_vec = parse_board(&board_copy);
-    let mut moves = HashSet::new();
 
+    // add move circles
+    let mut moves = HashSet::new();
     if selected.is_some() {
         let square: Square = selected.unwrap();
         for legal_move in MoveGen::new_legal(&board_copy) {
@@ -188,6 +193,8 @@ pub fn board() -> Html {
             }
         }
     }
+    // for checking if game has ended
+    let game_after_move = Game::new_with_board(board_copy);
 
     html! {
         <div
@@ -214,6 +221,11 @@ pub fn board() -> Html {
                 None => html!{<SquareComp color={color} piece={piece_prop} set_selected={set_selected.clone()} set_target={set_target.clone()} can_move_to={can_move_to} square={square}/>}
             }
         }) }
+        {html! {
+            if let Some(result) = game_after_move.result() {
+                <GameOverScreen result={result}/>
+            }
+        }}
         </div>
     }
 }
