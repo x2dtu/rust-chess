@@ -1,33 +1,6 @@
-use crate::constants::{DEPTH, PIECES};
-use chess::{Board, CacheTable, ChessMove, Color, MoveGen, Piece, EMPTY};
+use crate::{constants::DEPTH, evaluation::board_eval};
+use chess::{Board, CacheTable, ChessMove, MoveGen, EMPTY};
 use gloo_console::log;
-
-fn get_count_of_piece(piece: Piece) -> u32 {
-    match piece {
-        Piece::Pawn => 100,
-        Piece::Knight => 300,
-        Piece::Bishop => 320,
-        Piece::Rook => 500,
-        Piece::Queen => 900,
-        Piece::King => 10000,
-    }
-}
-
-fn count_material(board: &Board) -> i16 {
-    let mut material = 0;
-    for piece in PIECES {
-        let piece_bb = board.pieces(*piece);
-        material += ((piece_bb & board.color_combined(Color::White)).popcnt()
-            * get_count_of_piece(*piece)) as i16;
-        material -= ((piece_bb & board.color_combined(Color::Black)).popcnt()
-            * get_count_of_piece(*piece)) as i16;
-    }
-    material
-}
-
-fn board_eval(board: &Board, maximizing_player: bool) -> f32 {
-    return count_material(board) as f32;
-}
 
 fn search(
     board: &Board,
@@ -36,6 +9,7 @@ fn search(
     maximizing_player: bool,
     alpha_p: f32,
     beta_p: f32,
+    move_ply: u32,
 ) -> (f32, Option<ChessMove>) {
     let mut alpha = alpha_p;
     let mut beta = beta_p;
@@ -44,7 +18,7 @@ fn search(
         if let Some(evaluation) = transposition_table.get(hash) {
             return (evaluation, None);
         } else {
-            let evaluation = board_eval(board, !maximizing_player);
+            let evaluation = board_eval(board, !maximizing_player, move_ply);
             transposition_table.add(board.get_hash(), evaluation);
             return (evaluation, None);
         }
@@ -70,6 +44,7 @@ fn search(
                     !maximizing_player,
                     alpha,
                     beta,
+                    move_ply + 1,
                 )
                 .0
             };
@@ -102,6 +77,7 @@ fn search(
                         !maximizing_player,
                         alpha,
                         beta,
+                        move_ply + 1,
                     )
                     .0
                 };
@@ -139,6 +115,7 @@ fn search(
                     !maximizing_player,
                     alpha,
                     beta,
+                    move_ply + 1,
                 )
                 .0
             };
@@ -171,6 +148,7 @@ fn search(
                         !maximizing_player,
                         alpha,
                         beta,
+                        move_ply + 1,
                     )
                     .0
                 };
@@ -191,7 +169,7 @@ fn search(
     }
 }
 
-pub fn choose_move(board: &Board) -> Option<ChessMove> {
+pub fn choose_move(board: &Board, move_ply: u32) -> Option<ChessMove> {
     let mut transposition_table = CacheTable::new(65536, 0.0);
     let (eval, ai_move) = search(
         board,
@@ -200,6 +178,7 @@ pub fn choose_move(board: &Board) -> Option<ChessMove> {
         false,
         f32::NEG_INFINITY,
         f32::INFINITY,
+        move_ply,
     );
     log!(eval);
     if ai_move.is_none() {

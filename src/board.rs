@@ -115,6 +115,7 @@ fn parse_board(board: &Board) -> Vec<Option<&str>> {
 #[function_component(BoardComp)]
 pub fn board() -> Html {
     let board = use_state_eq(|| Board::default());
+    let move_ply = use_state(|| 0);
     let selected = use_state(|| None);
     let target = use_state(|| None);
     let in_opening_book = use_state(|| true);
@@ -139,6 +140,7 @@ pub fn board() -> Html {
         board.make_move(new_move, &mut board_copy);
 
         board.set(board_copy.clone());
+        move_ply.set(*move_ply + 1);
 
         // unset the move and selection
         selected.set(None);
@@ -154,7 +156,7 @@ pub fn board() -> Html {
                 } else {
                     // we just got out of opening book, so choose a move on our own now
                     in_opening_book.set(false);
-                    let ai_move = choose_move(&board);
+                    let ai_move = choose_move(&board, *move_ply);
                     if ai_move.is_some() {
                         let ai_move = ai_move.unwrap();
                         play_move_sound(&board_copy, &ai_move, true);
@@ -162,7 +164,7 @@ pub fn board() -> Html {
                     }
                 }
             } else {
-                let ai_move = choose_move(&board);
+                let ai_move = choose_move(&board, *move_ply);
                 if ai_move.is_some() {
                     let ai_move = ai_move.unwrap();
                     play_move_sound(&board_copy, &ai_move, true);
@@ -170,6 +172,7 @@ pub fn board() -> Html {
                 }
             }
             board.set(board_copy.clone());
+            move_ply.set(*move_ply + 1);
         });
         timeout.forget();
     }
