@@ -17,6 +17,7 @@ fn get_string_from_color(color: Color) -> &'static str {
 
 #[function_component(GameOverScreen)]
 pub fn game_over_screen(props: &GameOverScreenProps) -> Html {
+    let show_modal = use_state(|| true);
     let winning_color = match props.result {
         GameResult::WhiteCheckmates | GameResult::BlackResigns => Some(Color::White),
         GameResult::BlackCheckmates | GameResult::WhiteResigns => Some(Color::Black),
@@ -43,22 +44,33 @@ pub fn game_over_screen(props: &GameOverScreenProps) -> Html {
     let click_handler = Callback::from(move |_| {
         props_copy.reset_game.emit(Game::new());
     });
+    let show_modal_copy = show_modal.clone();
+    let cancel_click_handler = Callback::from(move |_| {
+        show_modal_copy.set(false);
+    });
 
-    html! {
-        <div
-        class="game-over"
-        >
-            <div class="restart-game-modal">
-                <div>
-                    <p class="game-message">{game_message}</p>
-                    {html! {
-                        if let Some(winning_message) = winning_message {
-                            <p>{winning_message}</p>
-                        }
-                    }}
+    if *show_modal {
+        html! {
+            <div
+            class="game-over"
+            >
+                <div class="restart-game-modal">
+                    <div>
+                        <p class="game-message">{game_message}</p>
+                        {html! {
+                            if let Some(winning_message) = winning_message {
+                                <p>{winning_message}</p>
+                            }
+                        }}
+                    </div>
+                    <div class="button-div">
+                        <button class="game-restart-button cancel-button" onclick={cancel_click_handler}>{"Cancel"}</button>
+                        <button class="game-restart-button" onclick={click_handler}>{"Play Again?"}</button>
+                    </div>
                 </div>
-                <button class="game-restart-button" onclick={click_handler}>{"Play Again?"}</button>
             </div>
-        </div>
+        }
+    } else {
+        html! {}
     }
 }
