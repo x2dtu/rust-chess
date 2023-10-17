@@ -132,6 +132,10 @@ pub fn board() -> Html {
         let target = target.clone();
         Callback::from(move |new_target| target.set(new_target))
     };
+    let reset_game = {
+        let game = game.clone();
+        Callback::from(move |new_game| game.set(new_game))
+    };
     if (*target).is_some() && (*selected).is_some() {
         let mut new_move = ChessMove::new(selected.unwrap(), target.unwrap(), None);
         if target.unwrap().get_rank() == Rank::Eighth
@@ -149,7 +153,7 @@ pub fn board() -> Html {
         // unset the move and selection
         selected.set(None);
         target.set(None);
-    } else if board.side_to_move() == Color::Black {
+    } else if board.side_to_move() == Color::Black && game.result().is_none() {
         let timeout = Timeout::new(0, move || {
             if *in_opening_book {
                 let ai_move = opening_book_move(board.get_hash());
@@ -223,7 +227,7 @@ pub fn board() -> Html {
         }) }
         {html! {
             if let Some(result) = game_after_move.result() {
-                <GameOverScreen result={result}/>
+                <GameOverScreen result={result} reset_game={reset_game}/>
             }
         }}
         </div>
