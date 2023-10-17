@@ -1,11 +1,80 @@
-use gloo_console::log;
 use gloo_timers::callback::Timeout;
 use std::collections::HashSet;
 use std::str::FromStr;
+use wasm_bindgen::JsCast;
 
 use crate::{bot::choose_move, opening_book::opening_book_move, square::SquareComp};
-use chess::{Board, ChessMove, Color, File, MoveGen, Piece, Rank, Square};
+use chess::{Board, BoardStatus, ChessMove, Color, File, MoveGen, Piece, Rank, Square};
+use web_sys::HtmlAudioElement;
 use yew::prelude::*;
+
+fn play_move_sound(board: &Board, chess_move: &ChessMove, is_ai: bool) {
+    let is_capture = is_move_a_capture(board, chess_move);
+    let mut board_after_move = board.clone();
+    board.make_move(*chess_move, &mut board_after_move);
+
+    let is_check = board_after_move.checkers().popcnt() > 0;
+    let is_promotion = chess_move.get_promotion().is_some();
+    let is_castle = is_move_a_castle(board, chess_move);
+    let game_over = board_after_move.status() != BoardStatus::Ongoing;
+
+    let window = web_sys::window().expect("no global `window` exists");
+    let document = window.document().expect("should have a document on window");
+    let sound = if game_over {
+        "game-over-sound"
+    } else if is_check {
+        "check-sound"
+    } else if is_capture {
+        "capture-sound"
+    } else if is_promotion {
+        "promote-sound"
+    } else if is_castle {
+        "castle-sound"
+    } else {
+        "move-sound"
+    };
+    let mut player = if is_ai {
+        "ai-".to_owned()
+    } else {
+        "".to_owned()
+    };
+    player.push_str(sound);
+    let audio = document
+        .get_element_by_id(&player)
+        .expect("should have an audio element");
+
+    let audio: HtmlAudioElement = audio
+        .dyn_into::<HtmlAudioElement>()
+        .expect("element should be an audio element");
+
+    let _ = audio.play().expect("failed to play audio");
+}
+
+fn is_move_a_capture(board: &Board, chess_move: &ChessMove) -> bool {
+    let target_square = chess_move.get_dest();
+    let source_square = chess_move.get_source();
+    if board.piece_on(target_square).is_some() {
+        return true;
+    }
+    if let Some(en_passant_square) = board.en_passant() {
+        return board.piece_on(source_square).unwrap() == Piece::Pawn
+            && (source_square.get_file().to_index() as i8
+                - en_passant_square.get_file().to_index() as i8)
+                .abs()
+                == 1;
+    }
+
+    return false;
+}
+
+fn is_move_a_castle(board: &Board, chess_move: &ChessMove) -> bool {
+    let target_square = chess_move.get_dest();
+    let source_square = chess_move.get_source();
+    return board.piece_on(source_square).unwrap() == Piece::King
+        && (source_square.get_file().to_index() as i8 - target_square.get_file().to_index() as i8)
+            .abs()
+            > 1;
+}
 
 fn parse_board(board: &Board) -> Vec<Option<&str>> {
     let mut result = Vec::new();
@@ -66,6 +135,7 @@ pub fn board() -> Html {
             // then we are promoting a pawn. lets just auto queen for now
             new_move = ChessMove::new(selected.unwrap(), target.unwrap(), Some(Piece::Queen));
         }
+        play_move_sound(&board_copy, &new_move, false);
         board.make_move(new_move, &mut board_copy);
 
         board.set(board_copy.clone());
@@ -74,13 +144,12 @@ pub fn board() -> Html {
         selected.set(None);
         target.set(None);
     } else if board.side_to_move() == Color::Black {
-        log!("in else if");
         let timeout = Timeout::new(0, move || {
-            log!("in timeout callback");
             if *in_opening_book {
                 let ai_move = opening_book_move(board.get_hash());
                 if ai_move.is_some() {
                     let ai_move = ai_move.unwrap();
+                    play_move_sound(&board_copy, &ai_move, true);
                     board.make_move(ai_move, &mut board_copy);
                 } else {
                     // we just got out of opening book, so choose a move on our own now
@@ -88,6 +157,7 @@ pub fn board() -> Html {
                     let ai_move = choose_move(&board);
                     if ai_move.is_some() {
                         let ai_move = ai_move.unwrap();
+                        play_move_sound(&board_copy, &ai_move, true);
                         board.make_move(ai_move, &mut board_copy);
                     }
                 }
@@ -95,6 +165,7 @@ pub fn board() -> Html {
                 let ai_move = choose_move(&board);
                 if ai_move.is_some() {
                     let ai_move = ai_move.unwrap();
+                    play_move_sound(&board_copy, &ai_move, true);
                     board.make_move(ai_move, &mut board_copy);
                 }
             }
@@ -102,7 +173,6 @@ pub fn board() -> Html {
         });
         timeout.forget();
     }
-    log!(board_copy.to_string());
 
     let board_vec = parse_board(&board_copy);
     let mut moves = HashSet::new();

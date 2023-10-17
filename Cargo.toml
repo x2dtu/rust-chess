@@ -18,5 +18,5 @@ getrandom = { version = "0.2", features = ["js"] }
 chess = "3.2.0"
 rand_distr = "0.4.3"
 rand = "0.8.5"
-web-sys = "0.3.64"
+web-sys = { version = "0.3.64", features = ["HtmlAudioElement"] }
 gloo-timers = "0.3.0"
