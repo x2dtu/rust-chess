@@ -44,7 +44,7 @@ main {
   left: calc(50% - 20px);
   z-index: 10;
   opacity: 0.5;
-  background-color: lightgray;
+  background-color: #b6b6b6;
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -131,4 +131,9 @@ main {
 
 .cancel-button {
   background-color: #355868;
+}
+
+.piece-image {
+  height: 90%;
+  width: 90%;
 }

@@ -11,6 +11,8 @@ pub struct SquareCompProps {
     pub square: Square,
     pub set_selected: Callback<Option<Square>>,
     pub set_target: Callback<Option<Square>>,
+    pub dest_square: bool,
+    pub source_square: bool,
 }
 
 #[function_component(SquareComp)]
@@ -27,14 +29,18 @@ pub fn square(props: &SquareCompProps) -> Html {
         // let object = JsValue::from("hello world");
         // log!("Hello", object);
     });
-    let bg_color = if props.color == "light" {
-        "#f2e1c3"
+    let bg_color = if props.dest_square {
+        "#f8f49c"
+    } else if props.source_square {
+        "#dbd78a"
+    } else if props.color == "light" {
+        "#e9d9b9"
     } else {
-        "#c3a082"
+        "#aa8a68"
     };
 
     let image_element = if props.piece.is_some() {
-        html! { <img src={props.piece.clone().unwrap()} alt="Piece" /> }
+        html! { <img src={props.piece.clone().unwrap()} alt="Piece" class="piece-image" /> }
     } else {
         html! {}
     };

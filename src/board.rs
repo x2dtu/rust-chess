@@ -96,18 +96,18 @@ fn parse_board(board: &Board) -> Vec<Option<&str>> {
                     .unwrap();
             }
             match c {
-                'r' => result.push(Some("img/72x72blackrook.png")),
-                'n' => result.push(Some("img/72x72blackknight.png")),
-                'b' => result.push(Some("img/72x72blackbishop.png")),
-                'q' => result.push(Some("img/72x72blackqueen.png")),
-                'k' => result.push(Some("img/72x72blackking.png")),
-                'p' => result.push(Some("img/72x72blackpawn.png")),
-                'R' => result.push(Some("img/72x72rook.png")),
-                'N' => result.push(Some("img/72x72knight.png")),
-                'B' => result.push(Some("img/72x72bishop.png")),
-                'Q' => result.push(Some("img/72x72queen.png")),
-                'K' => result.push(Some("img/72x72king.png")),
-                'P' => result.push(Some("img/72x72pawn.png")),
+                'r' => result.push(Some("img/bR.svg")),
+                'n' => result.push(Some("img/bN.svg")),
+                'b' => result.push(Some("img/bB.svg")),
+                'q' => result.push(Some("img/bQ.svg")),
+                'k' => result.push(Some("img/bK.svg")),
+                'p' => result.push(Some("img/bP.svg")),
+                'R' => result.push(Some("img/wR.svg")),
+                'N' => result.push(Some("img/wN.svg")),
+                'B' => result.push(Some("img/wB.svg")),
+                'Q' => result.push(Some("img/wQ.svg")),
+                'K' => result.push(Some("img/wK.svg")),
+                'P' => result.push(Some("img/wP.svg")),
                 _ => result.push(None),
             }
         }
@@ -121,6 +121,8 @@ pub fn board() -> Html {
     let move_ply = use_state(|| 0);
     let selected = use_state(|| None);
     let target = use_state(|| None);
+    let from_square = use_state(|| None);
+    let to_square = use_state(|| None);
     let in_opening_book = use_state(|| true);
     let board = game.current_position();
     let mut board_copy: Board = board.clone();
@@ -134,7 +136,15 @@ pub fn board() -> Html {
     };
     let reset_game = {
         let game = game.clone();
-        Callback::from(move |new_game| game.set(new_game))
+        let in_opening_book = in_opening_book.clone();
+        let from_square = from_square.clone();
+        let to_square = to_square.clone();
+        Callback::from(move |new_game| {
+            game.set(new_game);
+            in_opening_book.set(true);
+            from_square.set(None);
+            to_square.set(None);
+        })
     };
     if (*target).is_some() && (*selected).is_some() {
         let mut new_move = ChessMove::new(selected.unwrap(), target.unwrap(), None);
@@ -151,9 +161,13 @@ pub fn board() -> Html {
         move_ply.set(*move_ply + 1);
 
         // unset the move and selection
+        from_square.set(*selected);
+        to_square.set(*target);
         selected.set(None);
         target.set(None);
     } else if board.side_to_move() == Color::Black && game.result().is_none() {
+        let from_square_cloned = from_square.clone();
+        let to_square_cloned = to_square.clone();
         let timeout = Timeout::new(0, move || {
             if *in_opening_book {
                 let ai_move = opening_book_move(board.get_hash());
@@ -161,6 +175,8 @@ pub fn board() -> Html {
                     let ai_move = ai_move.unwrap();
                     play_move_sound(&board_copy, &ai_move, true);
                     board.make_move(ai_move, &mut board_copy);
+                    from_square_cloned.set(Some(ai_move.get_source()));
+                    to_square_cloned.set(Some(ai_move.get_dest()));
                 } else {
                     // we just got out of opening book, so choose a move on our own now
                     in_opening_book.set(false);
@@ -169,6 +185,8 @@ pub fn board() -> Html {
                         let ai_move = ai_move.unwrap();
                         play_move_sound(&board_copy, &ai_move, true);
                         board.make_move(ai_move, &mut board_copy);
+                        from_square_cloned.set(Some(ai_move.get_source()));
+                        to_square_cloned.set(Some(ai_move.get_dest()));
                     }
                 }
             } else {
@@ -177,6 +195,8 @@ pub fn board() -> Html {
                     let ai_move = ai_move.unwrap();
                     play_move_sound(&board_copy, &ai_move, true);
                     board.make_move(ai_move, &mut board_copy);
+                    from_square_cloned.set(Some(ai_move.get_source()));
+                    to_square_cloned.set(Some(ai_move.get_dest()));
                 }
             }
             game.set(Game::new_with_board(board_copy));
@@ -219,10 +239,12 @@ pub fn board() -> Html {
             );
             let square = Square::from_str(&algebraic).unwrap();
             let can_move_to = moves.contains(&square);
+            let source_square = from_square.is_some() && from_square.unwrap() == square;
+            let dest_square = to_square.is_some() && to_square.unwrap() == square;
 
             match piece {
-                Some(_) => html!{<SquareComp color={color} piece={piece_prop} set_selected={set_selected.clone()} set_target={set_target.clone()} can_move_to={can_move_to} square={square}/>},
-                None => html!{<SquareComp color={color} piece={piece_prop} set_selected={set_selected.clone()} set_target={set_target.clone()} can_move_to={can_move_to} square={square}/>}
+                Some(_) => html!{<SquareComp color={color} piece={piece_prop} set_selected={set_selected.clone()} set_target={set_target.clone()} can_move_to={can_move_to} square={square} source_square={source_square} dest_square={dest_square}/>},
+                None => html!{<SquareComp color={color} piece={piece_prop} set_selected={set_selected.clone()} set_target={set_target.clone()} can_move_to={can_move_to} square={square} source_square={source_square} dest_square={dest_square}/>}
             }
         }) }
         {html! {
