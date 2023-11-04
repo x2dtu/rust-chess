@@ -117,7 +117,8 @@ fn parse_board(board: &Board) -> Vec<Option<&str>> {
 
 #[function_component(BoardComp)]
 pub fn board() -> Html {
-    let game = use_state(|| Game::new());
+    // let game = use_state(|| Game::new());
+    let game = use_state(|| Game::from_str("2k5/8/7K/8/8/6q1/1b6/n3b3 b - - 0 1").unwrap());
     let move_ply = use_state(|| 0);
     let selected = use_state(|| None);
     let target = use_state(|| None);
@@ -168,7 +169,7 @@ pub fn board() -> Html {
     } else if board.side_to_move() == Color::Black && game.result().is_none() {
         let from_square_cloned = from_square.clone();
         let to_square_cloned = to_square.clone();
-        let timeout = Timeout::new(0, move || {
+        let timeout = Timeout::new(5, move || {
             if *in_opening_book {
                 let ai_move = opening_book_move(board.get_hash());
                 if ai_move.is_some() {

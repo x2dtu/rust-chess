@@ -1,4 +1,7 @@
-use crate::constants::{CASTLED_BONUS, ENDGAME_PLY, PIECES};
+use crate::constants::{
+    BLACK_PIECE_POSITIONS, CASTLED_BONUS, ENDGAME_INDEX_START, ENDGAME_PLY, MIDGAME_PLY,
+    NUM_COLUMNS, PIECES, WHITE_PIECE_POSITIONS,
+};
 use chess::{Board, BoardStatus, CastleRights, Color, Piece, Square};
 
 pub fn board_eval(board: &Board, maximizing_player: bool, move_ply: u32) -> f32 {
@@ -18,7 +21,8 @@ pub fn board_eval(board: &Board, maximizing_player: bool, move_ply: u32) -> f32 
     let material_count = count_material(board);
     let king_safety = evaluate_king_safety(board, color, move_ply);
     let castle_status = can_castle(board, color, move_ply);
-    eval += material_count + king_safety + castle_status;
+    let piece_positions = piece_positions(board, color, move_ply);
+    eval += material_count + king_safety + castle_status + piece_positions;
 
     if board.status() == BoardStatus::Stalemate {
         return if eval > 0 {
@@ -92,4 +96,38 @@ fn can_castle(board: &Board, color: Color, move_ply: u32) -> i16 {
     } else {
         0
     }
+}
+
+fn piece_positions(board: &Board, color: Color, move_ply: u32) -> i16 {
+    if move_ply >= MIDGAME_PLY && move_ply < ENDGAME_PLY {
+        return 0;
+    }
+    let mut piece_position_evaluation = 0;
+    let piece_positions = if color == Color::White {
+        WHITE_PIECE_POSITIONS
+    } else {
+        BLACK_PIECE_POSITIONS
+    };
+
+    for piece in PIECES {
+        let endgame = move_ply >= ENDGAME_PLY;
+        let piece_position_index = if endgame && *piece == Piece::Pawn {
+            ENDGAME_INDEX_START
+        } else if endgame && *piece == Piece::King {
+            ENDGAME_INDEX_START + 1
+        } else if endgame {
+            continue; // FOR THE MOMENT, DONT RELY ON PIECE POSITIONS FOR ENDGAME IF NOT A PAWN OR KING
+        } else {
+            piece.to_index()
+        };
+        let bit_board = board.pieces(*piece);
+        for square in *bit_board {
+            let file = square.get_file().to_index();
+            let rank = square.get_rank().to_index();
+            let index = NUM_COLUMNS * rank + file;
+            piece_position_evaluation += piece_positions[piece_position_index][index];
+        }
+    }
+    let color_multiplier = if color == Color::White { 1 } else { -1 };
+    piece_position_evaluation * color_multiplier
 }

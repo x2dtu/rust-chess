@@ -1,5 +1,5 @@
 use crate::{constants::DEPTH, evaluation::board_eval};
-use chess::{Board, CacheTable, ChessMove, MoveGen, EMPTY};
+use chess::{Board, BoardStatus, CacheTable, ChessMove, MoveGen, EMPTY};
 use gloo_console::log;
 
 fn search(
@@ -13,7 +13,7 @@ fn search(
 ) -> (f32, Option<ChessMove>) {
     let mut alpha = alpha_p;
     let mut beta = beta_p;
-    if depth == 0 {
+    if depth == 0 || board.status() != BoardStatus::Ongoing {
         let hash = board.get_hash();
         if let Some(evaluation) = transposition_table.get(hash) {
             return (evaluation, None);
