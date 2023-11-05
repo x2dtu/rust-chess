@@ -29,20 +29,20 @@ fn score(
 }
 
 fn order_moves(
-    moves: &mut Vec<ChessMove>,
+    moves: Vec<ChessMove>,
     board: &Board,
     iterative_deepening_ordering_table: &CacheTable<f32>,
-) {
+) -> Vec<ChessMove> {
     let mut scored_moves: Vec<(ChessMove, f32)> = moves
         .iter()
         .map(|&m| (m, score(m, board, iterative_deepening_ordering_table)))
         .collect();
 
-    // Sort based on the precomputed scores
-    scored_moves.sort_unstable_by_key(|&(_, score)| -score as i32);
+    // sort based on the precomputed scores
+    scored_moves.sort_unstable_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
 
-    // Extract the sorted moves
-    *moves = scored_moves.into_iter().map(|(m, _)| m).collect();
+    // extract the sorted moves
+    return scored_moves.into_iter().map(|(m, _)| m).collect();
 }
 
 fn search(
@@ -78,13 +78,11 @@ fn search(
         }
     }
     /* Generate all the legal moves and iterate over them */
-    let mut moves: Vec<ChessMove> = MoveGen::new_legal(board).collect();
-    // order_moves(&mut moves, board, iterative_deepening_ordering_table);
-    if depth == DEPTH {
-        for chess_move in &moves {
-            log!(chess_move.to_string());
-        }
-    }
+    let moves: Vec<ChessMove> = order_moves(
+        MoveGen::new_legal(board).collect(),
+        board,
+        iterative_deepening_ordering_table,
+    );
 
     if maximizing_player {
         /* If we are the maximzing player (i.e. white), get the move with the maximum evaluation */
@@ -150,7 +148,6 @@ fn search(
             transposition_table.add(board_with_move.get_hash(), evaluation);
             // iterative_deepening_ordering_table.add(board_with_move.get_hash(), evaluation);
 
-            alpha = f32::max(alpha, evaluation);
             if evaluation < best_val {
                 best_val = evaluation;
                 best_move = Some(legal_move);
@@ -169,7 +166,7 @@ pub fn choose_move(board: &Board, move_ply: u32) -> Option<ChessMove> {
     let mut iterative_deepening_ordering_table = CacheTable::new(65536, 0.0);
     let mut eval = 0.0;
     let mut ai_move = None;
-    for depth in 1..(DEPTH + 1) {
+    for depth in DEPTH..(DEPTH + 1) {
         let mut transposition_table = CacheTable::new(65536, 0.0);
         (eval, ai_move) = search(
             board,
