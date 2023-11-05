@@ -1,3 +1,4 @@
+use gloo_console::log;
 use gloo_timers::callback::Timeout;
 use std::collections::HashSet;
 use std::str::FromStr;
@@ -118,7 +119,9 @@ fn parse_board(board: &Board) -> Vec<Option<&str>> {
 #[function_component(BoardComp)]
 pub fn board() -> Html {
     // let game = use_state(|| Game::new());
-    let game = use_state(|| Game::from_str("2k5/8/7K/8/8/6q1/1b6/n3b3 b - - 0 1").unwrap());
+    // let game = use_state(|| Game::from_str("2k5/8/7K/8/8/6q1/1b6/n3b3 b - - 0 1").unwrap());
+    let game = use_state(|| Game::from_str("5r2/5pk1/5p2/7K/6P1/7P/1bn5/8 w - - 0 1").unwrap());
+    // let game = use_state(|| Game::from_str("5r2/5pk1/5p2/7K/6P1/2n4P/8/8 w - - 0 1").unwrap());
     let move_ply = use_state(|| 0);
     let selected = use_state(|| None);
     let target = use_state(|| None);
@@ -126,7 +129,7 @@ pub fn board() -> Html {
     let to_square = use_state(|| None);
     let in_opening_book = use_state(|| true);
     let board = game.current_position();
-    let mut board_copy: Board = board.clone();
+    let board_copy: Board = board.clone();
     let set_selected = {
         let selected = selected.clone();
         Callback::from(move |new_selected| selected.set(new_selected))
@@ -147,6 +150,8 @@ pub fn board() -> Html {
             to_square.set(None);
         })
     };
+    let mut game_clone = (*game).clone();
+    let check_game_ended = (*game).clone();
     if (*target).is_some() && (*selected).is_some() {
         let mut new_move = ChessMove::new(selected.unwrap(), target.unwrap(), None);
         if target.unwrap().get_rank() == Rank::Eighth
@@ -156,9 +161,13 @@ pub fn board() -> Html {
             new_move = ChessMove::new(selected.unwrap(), target.unwrap(), Some(Piece::Queen));
         }
         play_move_sound(&board_copy, &new_move, false);
-        board.make_move(new_move, &mut board_copy);
-
-        game.set(Game::new_with_board(board_copy));
+        // game.set(Game::new_with_board(board_copy));
+        game_clone.make_move(new_move);
+        if game_clone.can_declare_draw() {
+            log!("draw w");
+            game_clone.declare_draw();
+        }
+        game.set(game_clone);
         move_ply.set(*move_ply + 1);
 
         // unset the move and selection
@@ -175,7 +184,7 @@ pub fn board() -> Html {
                 if ai_move.is_some() {
                     let ai_move = ai_move.unwrap();
                     play_move_sound(&board_copy, &ai_move, true);
-                    board.make_move(ai_move, &mut board_copy);
+                    game_clone.make_move(ai_move);
                     from_square_cloned.set(Some(ai_move.get_source()));
                     to_square_cloned.set(Some(ai_move.get_dest()));
                 } else {
@@ -185,7 +194,7 @@ pub fn board() -> Html {
                     if ai_move.is_some() {
                         let ai_move = ai_move.unwrap();
                         play_move_sound(&board_copy, &ai_move, true);
-                        board.make_move(ai_move, &mut board_copy);
+                        game_clone.make_move(ai_move);
                         from_square_cloned.set(Some(ai_move.get_source()));
                         to_square_cloned.set(Some(ai_move.get_dest()));
                     }
@@ -195,12 +204,16 @@ pub fn board() -> Html {
                 if ai_move.is_some() {
                     let ai_move = ai_move.unwrap();
                     play_move_sound(&board_copy, &ai_move, true);
-                    board.make_move(ai_move, &mut board_copy);
+                    game_clone.make_move(ai_move);
                     from_square_cloned.set(Some(ai_move.get_source()));
                     to_square_cloned.set(Some(ai_move.get_dest()));
                 }
             }
-            game.set(Game::new_with_board(board_copy));
+            if game_clone.can_declare_draw() {
+                log!("draw b");
+                game_clone.declare_draw();
+            }
+            game.set(game_clone);
             move_ply.set(*move_ply + 1);
         });
         timeout.forget();
@@ -219,7 +232,7 @@ pub fn board() -> Html {
         }
     }
     // for checking if game has ended
-    let game_after_move = Game::new_with_board(board_copy);
+    // let game_after_move = Game::new_with_board(board_copy);
 
     html! {
         <div
@@ -249,7 +262,7 @@ pub fn board() -> Html {
             }
         }) }
         {html! {
-            if let Some(result) = game_after_move.result() {
+            if let Some(result) = check_game_ended.result() {
                 <GameOverScreen result={result} reset_game={reset_game}/>
             }
         }}
