@@ -2,55 +2,6 @@ use crate::{constants::DEPTH, evaluation::board_eval};
 use chess::{Board, BoardStatus, CacheTable, ChessMove, MoveGen, EMPTY};
 use gloo_console::log;
 
-/* define a helper method that will help us with iterative over our legal moves */
-fn iterate_over_moves(
-    board: &Board,
-    depth: u16,
-    transposition_table: &mut CacheTable<f32>,
-    maximizing_player: bool,
-    alpha: &mut f32,
-    beta: &mut f32,
-    move_ply: u32,
-    moves: &mut MoveGen,
-    best_val: &mut f32,
-    best_move: &mut Option<ChessMove>,
-    has_broken: &mut bool,
-) {
-    if !*has_broken {
-        for legal_move in moves {
-            let mut board_with_move = board.clone();
-            board.make_move(legal_move, &mut board_with_move);
-            let evaluation_option = transposition_table.get(board_with_move.get_hash());
-            let evaluation = if evaluation_option.is_some() {
-                evaluation_option.unwrap()
-            } else {
-                search(
-                    &board_with_move,
-                    depth - 1,
-                    transposition_table,
-                    !maximizing_player,
-                    *alpha,
-                    *beta,
-                    move_ply + 1,
-                )
-                .0
-            };
-            transposition_table.add(board_with_move.get_hash(), evaluation);
-
-            if evaluation > *best_val {
-                *best_val = evaluation;
-                *best_move = Some(legal_move);
-            }
-            *alpha = f32::max(*alpha, evaluation);
-            //  if our alpha is >= beta, no need to search any further. PRUNE!
-            if *alpha >= *beta {
-                *has_broken = true;
-                break;
-            }
-        }
-    }
-}
-
 fn search(
     board: &Board,
     depth: u16,
@@ -90,11 +41,19 @@ fn search(
                 };
                 transposition_table.add(board_with_move.get_hash(), evaluation);
 
-                if evaluation > *best_val {
-                    *best_val = evaluation;
-                    *best_move = Some(legal_move);
+                if maximizing_player {
+                    if evaluation > *best_val {
+                        *best_val = evaluation;
+                        *best_move = Some(legal_move);
+                    }
+                    *alpha = f32::max(*alpha, evaluation);
+                } else {
+                    if evaluation < *best_val {
+                        *best_val = evaluation;
+                        *best_move = Some(legal_move);
+                    }
+                    *beta = f32::min(*beta, evaluation);
                 }
-                *alpha = f32::max(*alpha, evaluation);
                 //  if our alpha is >= beta, no need to search any further. PRUNE!
                 if *alpha >= *beta {
                     *has_broken = true;
@@ -133,14 +92,9 @@ fn search(
         let checks = board.checkers();
         moves.set_iterator_mask(*checks);
         iterate_over_moves(
-            // board,
-            // depth,
-            // transposition_table,
-            // maximizing_player,
             &mut moves,
             &mut alpha,
             &mut beta,
-            // move_ply,
             &mut best_val,
             &mut best_move,
             &mut has_broken,
@@ -148,28 +102,18 @@ fn search(
         let captures = board.color_combined(!board.side_to_move());
         moves.set_iterator_mask(*captures);
         iterate_over_moves(
-            // board,
-            // depth,
-            // transposition_table,
-            // maximizing_player,
             &mut moves,
             &mut alpha,
             &mut beta,
-            // move_ply,
             &mut best_val,
             &mut best_move,
             &mut has_broken,
         );
         moves.set_iterator_mask(!EMPTY);
         iterate_over_moves(
-            // board,
-            // depth,
-            // transposition_table,
-            // maximizing_player,
             &mut moves,
             &mut alpha,
             &mut beta,
-            // move_ply,
             &mut best_val,
             &mut best_move,
             &mut has_broken,
@@ -184,14 +128,9 @@ fn search(
         let checks = board.checkers();
         moves.set_iterator_mask(*checks);
         iterate_over_moves(
-            // board,
-            // depth,
-            // transposition_table,
-            // maximizing_player,
             &mut moves,
             &mut alpha,
             &mut beta,
-            // move_ply,
             &mut best_val,
             &mut best_move,
             &mut has_broken,
@@ -199,28 +138,18 @@ fn search(
         let captures = board.color_combined(!board.side_to_move());
         moves.set_iterator_mask(*captures);
         iterate_over_moves(
-            // board,
-            // depth,
-            // transposition_table,
-            // maximizing_player,
             &mut moves,
             &mut alpha,
             &mut beta,
-            // move_ply,
             &mut best_val,
             &mut best_move,
             &mut has_broken,
         );
         moves.set_iterator_mask(!EMPTY);
         iterate_over_moves(
-            // board,
-            // depth,
-            // transposition_table,
-            // maximizing_player,
             &mut moves,
             &mut alpha,
             &mut beta,
-            // move_ply,
             &mut best_val,
             &mut best_move,
             &mut has_broken,
