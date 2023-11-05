@@ -1,4 +1,3 @@
-use gloo_console::log;
 use gloo_timers::callback::Timeout;
 use std::collections::HashSet;
 use std::str::FromStr;
@@ -119,8 +118,8 @@ fn parse_board(board: &Board) -> Vec<Option<&str>> {
 #[function_component(BoardComp)]
 pub fn board() -> Html {
     // let game = use_state(|| Game::new());
-    // let game = use_state(|| Game::from_str("2k5/8/7K/8/8/6q1/1b6/n3b3 b - - 0 1").unwrap());
-    let game = use_state(|| Game::from_str("5r2/5pk1/5p2/7K/6P1/7P/1bn5/8 w - - 0 1").unwrap());
+    let game = use_state(|| Game::from_str("2k5/8/7K/8/8/6q1/1b6/n3b3 b - - 0 1").unwrap());
+    // let game = use_state(|| Game::from_str("5r2/5pk1/5p2/7K/6P1/7P/1bn5/8 w - - 0 1").unwrap());
     // let game = use_state(|| Game::from_str("5r2/5pk1/5p2/7K/6P1/2n4P/8/8 w - - 0 1").unwrap());
     let move_ply = use_state(|| 0);
     let selected = use_state(|| None);
@@ -164,7 +163,6 @@ pub fn board() -> Html {
         // game.set(Game::new_with_board(board_copy));
         game_clone.make_move(new_move);
         if game_clone.can_declare_draw() {
-            log!("draw w");
             game_clone.declare_draw();
         }
         game.set(game_clone);
@@ -210,7 +208,6 @@ pub fn board() -> Html {
                 }
             }
             if game_clone.can_declare_draw() {
-                log!("draw b");
                 game_clone.declare_draw();
             }
             game.set(game_clone);

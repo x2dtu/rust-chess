@@ -1,6 +1,24 @@
 use crate::{constants::DEPTH, evaluation::board_eval};
-use chess::{Board, BoardStatus, CacheTable, ChessMove, MoveGen, EMPTY};
+use chess::{BitBoard, Board, BoardStatus, CacheTable, ChessMove, MoveGen, EMPTY};
 use gloo_console::log;
+
+/**
+ * This method will get a bit board of all the legal moves from param board that put opponent into check
+ */
+fn get_checking_moves(board: &Board) -> BitBoard {
+    let mut checking_bit_board = BitBoard::new(0);
+
+    let moves = MoveGen::new_legal(board);
+    for legal_move in moves {
+        let mut board_with_move = board.clone();
+        board.make_move(legal_move, &mut board_with_move);
+        if board_with_move.checkers().popcnt() > 0 {
+            let dest_square = legal_move.get_dest();
+            checking_bit_board |= BitBoard::set(dest_square.get_rank(), dest_square.get_file());
+        }
+    }
+    return checking_bit_board;
+}
 
 fn search(
     board: &Board,
@@ -89,16 +107,16 @@ fn search(
         let mut best_move = None;
         let mut has_broken = false;
         /* Order moves first by looking at checks, then captures, then the remaining moves */
-        let checks = board.checkers();
-        moves.set_iterator_mask(*checks);
-        iterate_over_moves(
-            &mut moves,
-            &mut alpha,
-            &mut beta,
-            &mut best_val,
-            &mut best_move,
-            &mut has_broken,
-        );
+        // let checks = get_checking_moves(board);
+        // moves.set_iterator_mask(checks);
+        // iterate_over_moves(
+        //     &mut moves,
+        //     &mut alpha,
+        //     &mut beta,
+        //     &mut best_val,
+        //     &mut best_move,
+        //     &mut has_broken,
+        // );
         let captures = board.color_combined(!board.side_to_move());
         moves.set_iterator_mask(*captures);
         iterate_over_moves(
@@ -125,8 +143,8 @@ fn search(
         let mut best_move: Option<ChessMove> = None;
         let mut has_broken = false;
         /* Order moves first by looking at checks, then captures, then the remaining moves */
-        let checks = board.checkers();
-        moves.set_iterator_mask(*checks);
+        let checks = get_checking_moves(board);
+        moves.set_iterator_mask(checks);
         iterate_over_moves(
             &mut moves,
             &mut alpha,
@@ -154,14 +172,6 @@ fn search(
             &mut best_move,
             &mut has_broken,
         );
-        log!(
-            best_val,
-            if best_move.is_some() {
-                best_move.unwrap().to_string()
-            } else {
-                "none".to_owned()
-            }
-        );
         return (best_val, best_move);
     }
 }
@@ -177,7 +187,7 @@ pub fn choose_move(board: &Board, move_ply: u32) -> Option<ChessMove> {
         f32::INFINITY,
         move_ply,
     );
-    log!(eval);
+    log!(eval, "made a move");
     if ai_move.is_none() {
         log!("I can't find a good move to save me...");
         return MoveGen::new_legal(board).next();
