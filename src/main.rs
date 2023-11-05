@@ -1,10 +1,10 @@
 mod app;
 mod board;
-pub mod bot;
 pub mod constants;
 pub mod evaluation;
 mod game_over_screen;
 pub mod opening_book;
+pub mod search;
 mod square;
 
 use app::App;

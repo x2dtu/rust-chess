@@ -5,7 +5,7 @@ use std::str::FromStr;
 use wasm_bindgen::JsCast;
 
 use crate::{
-    bot::choose_move, game_over_screen::GameOverScreen, opening_book::opening_book_move,
+    game_over_screen::GameOverScreen, opening_book::opening_book_move, search::choose_move,
     square::SquareComp,
 };
 use chess::{Board, BoardStatus, ChessMove, Color, File, Game, MoveGen, Piece, Rank, Square};
