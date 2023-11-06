@@ -7,8 +7,7 @@ fn score(
     board: &Board,
     iterative_deepening_ordering_table: &CacheTable<f32>,
 ) -> f32 {
-    let mut board_with_move = board.clone();
-    board.make_move(chess_move, &mut board_with_move);
+    let board_with_move = board.make_move_new(chess_move);
     let history_boost = iterative_deepening_ordering_table
         .get(board_with_move.get_hash())
         .unwrap_or(0.0);
@@ -90,8 +89,7 @@ fn search(
         let mut best_move = None;
         /* Order moves first by looking at checks, then captures, then the remaining moves */
         for legal_move in moves {
-            let mut board_with_move = board.clone();
-            board.make_move(legal_move, &mut board_with_move);
+            let board_with_move = board.make_move_new(legal_move);
             let evaluation_option = transposition_table.get(board_with_move.get_hash());
             let evaluation = if evaluation_option.is_some() {
                 evaluation_option.unwrap()
@@ -127,8 +125,7 @@ fn search(
         let mut best_val = f32::INFINITY;
         let mut best_move: Option<ChessMove> = None;
         for legal_move in moves {
-            let mut board_with_move = board.clone();
-            board.make_move(legal_move, &mut board_with_move);
+            let board_with_move = board.make_move_new(legal_move);
             let evaluation_option = transposition_table.get(board_with_move.get_hash());
             let evaluation = if evaluation_option.is_some() {
                 evaluation_option.unwrap()
