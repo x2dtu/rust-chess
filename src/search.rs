@@ -73,7 +73,7 @@ fn search(
                 board_eval(board, !maximizing_player, move_ply)
             };
             transposition_table.add(board.get_hash(), evaluation);
-            // iterative_deepening_ordering_table.add(board.get_hash(), evaluation);
+            iterative_deepening_ordering_table.add(board.get_hash(), evaluation);
             return (evaluation, None);
         }
     }
@@ -109,7 +109,7 @@ fn search(
                 .0
             };
             transposition_table.add(board_with_move.get_hash(), evaluation);
-            // iterative_deepening_ordering_table.add(board_with_move.get_hash(), evaluation);
+            iterative_deepening_ordering_table.add(board_with_move.get_hash(), evaluation);
 
             if evaluation > best_val {
                 best_val = evaluation;
@@ -146,7 +146,7 @@ fn search(
                 .0
             };
             transposition_table.add(board_with_move.get_hash(), evaluation);
-            // iterative_deepening_ordering_table.add(board_with_move.get_hash(), evaluation);
+            iterative_deepening_ordering_table.add(board_with_move.get_hash(), evaluation);
 
             if evaluation < best_val {
                 best_val = evaluation;
@@ -158,6 +158,14 @@ fn search(
                 break;
             }
         }
+        // log!(
+        //     best_val,
+        //     if best_move.is_some() {
+        //         best_move.unwrap().to_string()
+        //     } else {
+        //         "none".to_owned()
+        //     }
+        // );
         return (best_val, best_move);
     }
 }
@@ -166,7 +174,7 @@ pub fn choose_move(board: &Board, move_ply: u32) -> Option<ChessMove> {
     let mut iterative_deepening_ordering_table = CacheTable::new(65536, 0.0);
     let mut eval = 0.0;
     let mut ai_move = None;
-    for depth in DEPTH..(DEPTH + 1) {
+    for depth in 1..(DEPTH + 1) {
         let mut transposition_table = CacheTable::new(65536, 0.0);
         (eval, ai_move) = search(
             board,
