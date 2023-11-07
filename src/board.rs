@@ -117,8 +117,8 @@ fn parse_board(board: &Board) -> Vec<Option<&str>> {
 
 #[function_component(BoardComp)]
 pub fn board() -> Html {
-    // let game = use_state(|| Game::new());
-    let game = use_state(|| Game::from_str("2k5/8/7K/8/8/6q1/1b6/n3b3 b - - 0 1").unwrap());
+    let game = use_state(|| Game::new());
+    // let game = use_state(|| Game::from_str("2k5/8/7K/8/8/6q1/1b6/n3b3 b - - 0 1").unwrap());
     // let game = use_state(|| Game::from_str("5r2/5pk1/5p2/7K/6P1/7P/1bn5/8 w - - 0 1").unwrap());
     // let game = use_state(|| Game::from_str("5r2/5pk1/5p2/7K/6P1/2n4P/8/8 w - - 0 1").unwrap());
 
@@ -134,6 +134,8 @@ pub fn board() -> Html {
     let move_ply = use_state(|| 0);
     let selected = use_state(|| None);
     let target = use_state(|| None);
+    let human_is_playing = use_state(|| false); // false for now
+    let start_game = use_state(|| false);
     let from_square = use_state(|| None);
     let to_square = use_state(|| None);
     let in_opening_book = use_state(|| true);
@@ -161,7 +163,9 @@ pub fn board() -> Html {
     };
     let mut game_clone = (*game).clone();
     let check_game_ended = (*game).clone();
-    if (*target).is_some() && (*selected).is_some() {
+    if !(*human_is_playing) && !(*start_game) {
+        // then just wait for human to start the game between AIs
+    } else if (*target).is_some() && (*selected).is_some() && *human_is_playing {
         let mut new_move = ChessMove::new(selected.unwrap(), target.unwrap(), None);
         if target.unwrap().get_rank() == Rank::Eighth
             && board.piece_on(selected.unwrap()).unwrap() == Piece::Pawn
@@ -183,7 +187,9 @@ pub fn board() -> Html {
         to_square.set(*target);
         selected.set(None);
         target.set(None);
-    } else if board.side_to_move() == Color::Black && game.result().is_none() {
+    } else if (board.side_to_move() == Color::Black && game.result().is_none())
+        || (board.side_to_move() == Color::White && !(*human_is_playing) && game.result().is_none())
+    {
         let from_square_cloned = from_square.clone();
         let to_square_cloned = to_square.clone();
         let timeout = Timeout::new(5, move || {
@@ -198,7 +204,8 @@ pub fn board() -> Html {
                 } else {
                     // we just got out of opening book, so choose a move on our own now
                     in_opening_book.set(false);
-                    let ai_move = choose_move(&board, *move_ply);
+                    let ai_move =
+                        choose_move(&board, *move_ply, board.side_to_move() == Color::White);
                     if ai_move.is_some() {
                         let ai_move = ai_move.unwrap();
                         play_move_sound(&board_copy, &ai_move, true);
@@ -208,7 +215,7 @@ pub fn board() -> Html {
                     }
                 }
             } else {
-                let ai_move = choose_move(&board, *move_ply);
+                let ai_move = choose_move(&board, *move_ply, board.side_to_move() == Color::White);
                 if ai_move.is_some() {
                     let ai_move = ai_move.unwrap();
                     play_move_sound(&board_copy, &ai_move, true);
@@ -271,6 +278,9 @@ pub fn board() -> Html {
         {html! {
             if let Some(result) = check_game_ended.result() {
                 <GameOverScreen result={result} reset_game={reset_game}/>
+            }
+            else if !(*human_is_playing) && !(*start_game) {
+                <button onclick={Callback::from(move |_| start_game.set(true))}>{"Start Game"}</button>
             }
         }}
         </div>

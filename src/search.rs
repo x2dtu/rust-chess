@@ -167,7 +167,7 @@ fn search(
     }
 }
 
-pub fn choose_move(board: &Board, move_ply: u32) -> Option<ChessMove> {
+pub fn choose_move(board: &Board, move_ply: u32, is_white: bool) -> Option<ChessMove> {
     let mut iterative_deepening_ordering_table = CacheTable::new(65536, 0.0);
     let mut eval = 0.0;
     let mut ai_move = None;
@@ -178,7 +178,7 @@ pub fn choose_move(board: &Board, move_ply: u32) -> Option<ChessMove> {
             depth,
             &mut transposition_table,
             &mut iterative_deepening_ordering_table,
-            false,
+            is_white,
             f32::NEG_INFINITY,
             f32::INFINITY,
             move_ply,
