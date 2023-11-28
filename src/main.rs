@@ -6,6 +6,7 @@ mod game_over_screen;
 pub mod opening_book;
 pub mod search;
 mod square;
+mod transposition_table;
 
 use app::App;
 

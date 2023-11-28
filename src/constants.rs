@@ -1,6 +1,8 @@
 use chess::Piece;
 
-pub const DEPTH: u16 = 7;
+pub const MAX_DEPTH: u8 = 8;
+
+pub const CHECKMATE_EVAL: i32 = 1_000_000;
 
 pub const PIECES: &'static [Piece] = &[
     Piece::Pawn,

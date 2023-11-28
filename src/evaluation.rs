@@ -1,10 +1,10 @@
 use crate::constants::{
-    BLACK_PIECE_POSITIONS, CASTLED_BONUS, ENDGAME_INDEX_START, ENDGAME_PLY, MIDGAME_PLY,
-    NUM_COLUMNS, PIECES, WHITE_PIECE_POSITIONS,
+    BLACK_PIECE_POSITIONS, CASTLED_BONUS, CHECKMATE_EVAL, ENDGAME_INDEX_START, ENDGAME_PLY,
+    MIDGAME_PLY, NUM_COLUMNS, PIECES, WHITE_PIECE_POSITIONS,
 };
 use chess::{Board, BoardStatus, CastleRights, Color, Piece, Square};
 
-pub fn board_eval(board: &Board, maximizing_player: bool, move_ply: u32) -> f32 {
+pub fn board_eval(board: &Board, maximizing_player: bool, move_ply: u32) -> i32 {
     let color = if maximizing_player {
         Color::White
     } else {
@@ -12,10 +12,13 @@ pub fn board_eval(board: &Board, maximizing_player: bool, move_ply: u32) -> f32 
     };
     if board.status() == BoardStatus::Checkmate {
         return if color == Color::White {
-            f32::NEG_INFINITY
+            -CHECKMATE_EVAL
         } else {
-            f32::INFINITY
+            CHECKMATE_EVAL
         };
+    }
+    if board.status() == BoardStatus::Stalemate {
+        return 0;
     }
     let mut eval = 0;
     let material_count = count_material(board);
@@ -24,16 +27,7 @@ pub fn board_eval(board: &Board, maximizing_player: bool, move_ply: u32) -> f32 
     let piece_positions = piece_positions(board, color, move_ply);
     eval += material_count + king_safety + castle_status + piece_positions;
 
-    if board.status() == BoardStatus::Stalemate {
-        return if eval > 0 {
-            f32::NEG_INFINITY
-        } else if eval < 0 {
-            f32::INFINITY
-        } else {
-            0.0
-        };
-    }
-    return eval as f32;
+    return eval as i32;
 }
 
 fn count_material(board: &Board) -> i16 {

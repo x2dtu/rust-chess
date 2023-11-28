@@ -117,7 +117,7 @@ fn parse_board(board: &Board) -> Vec<Option<&str>> {
 
 #[function_component(BoardComp)]
 pub fn board() -> Html {
-    let game = use_state(|| Game::new());
+    // let game = use_state(|| Game::new());
     // let game = use_state(|| Game::from_str("2k5/8/7K/8/8/6q1/1b6/n3b3 b - - 0 1").unwrap());
     // let game = use_state(|| Game::from_str("5r2/5pk1/5p2/7K/6P1/7P/1bn5/8 w - - 0 1").unwrap());
     // let game = use_state(|| Game::from_str("5r2/5pk1/5p2/7K/6P1/2n4P/8/8 w - - 0 1").unwrap());
@@ -127,6 +127,13 @@ pub fn board() -> Html {
     //     Game::from_str("6k1/3b3r/1p1p4/p1n2p2/1PPNpP1q/P3Q1p1/1R1RB1P1/5K2 b - - 0-1").unwrap()
     // });
 
+    // let game = use_state(|| {
+    //     Game::from_str("4rr2/1p4bk/2p3pn/B3n2b/P4N1q/1P5P/6PK/1BQ1RR2 b - - 1 31").unwrap()
+    // });
+    let game = use_state(|| {
+        Game::from_str("4rr2/1p4bk/2p3pn/B3n2b/P4N1q/1P5P/6PK/1BQR1R2 w - - 1 31").unwrap()
+    });
+
     // M6
     // let game = use_state(|| {
     // Game::from_str("r4rk1/pp3ppp/3pp2B/3p4/4nPQ1/2P1PR2/Pq4PP/RN4K1 b - - 0 1").unwrap()
@@ -134,7 +141,7 @@ pub fn board() -> Html {
     let move_ply = use_state(|| 0);
     let selected = use_state(|| None);
     let target = use_state(|| None);
-    let human_is_playing = use_state(|| false); // false for now
+    let human_is_playing = use_state(|| true); // false for now
     let start_game = use_state(|| false);
     let from_square = use_state(|| None);
     let to_square = use_state(|| None);
