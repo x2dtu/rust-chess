@@ -43,13 +43,11 @@ fn search(
     ply_searched: u8,
     num_extensions: u8,
     maximizing_player: bool,
-    alpha_p: i32,
-    beta_p: i32,
+    mut alpha: i32,
+    mut beta: i32,
     move_ply: u32,
 ) -> (i32, Option<ChessMove>) {
-    let mut alpha = alpha_p;
-    let mut beta = beta_p;
-
+    let orig_alpha = alpha;
     /* base cases for search function */
     /* 1. we have already seen this position before */
     if let Some(evaluation_move_pair) =
@@ -68,7 +66,7 @@ fn search(
         } else if board.status() == BoardStatus::Stalemate {
             0
         } else {
-            board_eval(board, !maximizing_player, move_ply)
+            quiescence_search(board, alpha, beta, !maximizing_player)
         };
         transposition_table.add(
             board.get_hash(),
@@ -141,7 +139,7 @@ fn search(
             return (best_val, best_move);
         }
     }
-    let entry_type = if best_val < alpha_p {
+    let entry_type = if best_val < orig_alpha {
         Type::UpperBound
     } else {
         Type::Exact
@@ -155,6 +153,32 @@ fn search(
         ply_searched,
     );
     return (best_val, best_move);
+}
+
+fn quiescence_search(board: &Board, mut alpha: i32, beta: i32, maximizing_player: bool) -> i32 {
+    let evaluation = board_eval(board, maximizing_player, 1_______________________1);
+    if evaluation >= beta {
+        return beta; // cutoff - opposing player will not go down this path
+    }
+    if evaluation > alpha {
+        alpha = evaluation;
+    }
+    let mut moves = MoveGen::new_legal(board);
+    let targets = board.color_combined(!board.side_to_move());
+    moves.set_iterator_mask(*targets);
+    for capture_move in moves {
+        let board_with_capture_move = board.make_move_new(capture_move);
+        let sign = if maximizing_player { 1 } else { -1 };
+        let evaluation =
+            quiescence_search(&board_with_capture_move, alpha, beta, !maximizing_player) * sign;
+        if evaluation >= beta {
+            return beta; // cutoff - opposing player will not go down this path
+        }
+        if alpha > evaluation {
+            alpha = evaluation;
+        }
+    }
+    return alpha;
 }
 
 pub fn choose_move(board: &Board, move_ply: u32, is_white: bool) -> Option<ChessMove> {
