@@ -124,8 +124,11 @@ pub fn board() -> Html {
     // let game = use_state(|| Game::from_str("8/8/3k4/2p5/2p5/7p/6r1/4K3 w - - 0 1").unwrap());
 
     // M5 works :O
+    // let game = use_state(|| {
+    //     Game::from_str("6k1/3b3r/1p1p4/p1n2p2/1PPNpP1q/P3Q1p1/1R1RB1P1/5K2 b - - 0 1").unwrap()
+    // });
     let game = use_state(|| {
-        Game::from_str("6k1/3b3r/1p1p4/p1n2p2/1PPNpP1q/P3Q1p1/1R1RB1P1/5K2 b - - 0-1").unwrap()
+        Game::from_str("6k1/3b3r/1p1p4/p1n2p2/1PPNpP1q/P3Q1p1/1R1RB1P1/4K3 w - - 0 1").unwrap()
     });
 
     // let game = use_state(|| {
@@ -212,8 +215,7 @@ pub fn board() -> Html {
                 } else {
                     // we just got out of opening book, so choose a move on our own now
                     in_opening_book.set(false);
-                    let ai_move =
-                        choose_move(&board, *move_ply, board.side_to_move() == Color::White);
+                    let ai_move = choose_move(&board, *move_ply);
                     if ai_move.is_some() {
                         let ai_move = ai_move.unwrap();
                         play_move_sound(&board_copy, &ai_move, true);
@@ -223,7 +225,7 @@ pub fn board() -> Html {
                     }
                 }
             } else {
-                let ai_move = choose_move(&board, *move_ply, board.side_to_move() == Color::White);
+                let ai_move = choose_move(&board, *move_ply);
                 if ai_move.is_some() {
                     let ai_move = ai_move.unwrap();
                     play_move_sound(&board_copy, &ai_move, true);

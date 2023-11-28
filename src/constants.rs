@@ -22,6 +22,8 @@ pub const CASTLED_BONUS: i16 = 150; // 150
 
 pub const NUM_COLUMNS: usize = 8;
 
+pub const MAX_KILLER_MOVE_PLY: usize = 32; // 2^5
+
 // Inspired by Sebastian Lague's piece evaluation grids
 pub const ENDGAME_INDEX_START: usize = 6; // pawns at start of game look at index [0] for piece position, the look at 6 for endgame
 
