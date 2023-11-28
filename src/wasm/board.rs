@@ -4,8 +4,8 @@ use std::str::FromStr;
 use wasm_bindgen::JsCast;
 
 use crate::{
-    game_over_screen::GameOverScreen, opening_book::opening_book_move, search::choose_move,
-    square::SquareComp,
+    opening_book::opening_book_move, search::choose_move, wasm::game_over_screen::GameOverScreen,
+    wasm::square::SquareComp,
 };
 use chess::{Board, BoardStatus, ChessMove, Color, File, Game, MoveGen, Piece, Rank, Square};
 use web_sys::HtmlAudioElement;

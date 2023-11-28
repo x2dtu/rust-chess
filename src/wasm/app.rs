@@ -1,6 +1,6 @@
 use yew::prelude::*;
 
-use crate::board::BoardComp;
+use crate::wasm::board::BoardComp;
 
 #[function_component(App)]
 pub fn app() -> Html {
