@@ -80,118 +80,73 @@ fn search(
         return (evaluation, None);
     }
     /* Generate all the legal moves and iterate over them */
+    /* Order moves first by looking at checks, then captures, then the remaining moves */
     let moves: Vec<ChessMove> = order_moves(MoveGen::new_legal(board).collect(), board);
 
-    if maximizing_player {
-        /* If we are the maximzing player (i.e. white), get the move with the maximum evaluation */
-        let mut best_val = -CHECKMATE_EVAL;
-        let mut best_move = None;
-        /* Order moves first by looking at checks, then captures, then the remaining moves */
-        for legal_move in moves {
-            let board_with_move = board.make_move_new(legal_move);
-            let evaluation = search(
-                &board_with_move,
-                transposition_table,
-                ply_remaining - 1,
-                ply_searched + 1,
-                !maximizing_player,
-                alpha,
-                beta,
-                move_ply + 1,
-            )
-            .0;
+    /* If we are the maximzing player (i.e. white), get the move with the maximum evaluation */
+    /* If we are the minimizing player (i.e. black), get the move with the minimum evaluation */
+    let mut best_val = if maximizing_player {
+        -CHECKMATE_EVAL
+    } else {
+        CHECKMATE_EVAL
+    };
+    let mut best_move = None;
 
+    for legal_move in moves {
+        let board_with_move = board.make_move_new(legal_move);
+        let evaluation = search(
+            &board_with_move,
+            transposition_table,
+            ply_remaining - 1,
+            ply_searched + 1,
+            !maximizing_player,
+            alpha,
+            beta,
+            move_ply + 1,
+        )
+        .0;
+
+        if maximizing_player {
             if evaluation > best_val {
                 best_val = evaluation;
                 best_move = Some(legal_move);
             }
             alpha = i32::max(alpha, evaluation);
-            //  if our alpha is >= beta, no need to search any further. PRUNE!
-            if alpha >= beta {
-                transposition_table.add(
-                    board_with_move.get_hash(),
-                    evaluation,
-                    ply_remaining,
-                    Type::LowerBound,
-                    best_move,
-                    ply_searched,
-                );
-                return (best_val, best_move);
-            }
-        }
-        let entry_type = if best_val < alpha_p {
-            Type::UpperBound
         } else {
-            Type::Exact
-        };
-        transposition_table.add(
-            board.get_hash(),
-            best_val,
-            ply_remaining,
-            entry_type,
-            best_move,
-            ply_searched,
-        );
-        return (best_val, best_move);
-    } else {
-        /* If we are the minimizing player (i.e. black), get the move with the minimum evaluation */
-        let mut best_val = CHECKMATE_EVAL;
-        let mut best_move: Option<ChessMove> = None;
-        for legal_move in moves {
-            let board_with_move = board.make_move_new(legal_move);
-            let evaluation = search(
-                &board_with_move,
-                transposition_table,
-                ply_remaining - 1,
-                ply_searched + 1,
-                !maximizing_player,
-                alpha,
-                beta,
-                move_ply + 1,
-            )
-            .0;
-
             if evaluation < best_val {
                 best_val = evaluation;
                 best_move = Some(legal_move);
             }
             beta = i32::min(beta, evaluation);
-            //  if our alpha is >= beta, no need to search any further. PRUNE!
-            if alpha >= beta {
-                transposition_table.add(
-                    board_with_move.get_hash(),
-                    evaluation,
-                    ply_remaining,
-                    Type::LowerBound,
-                    best_move,
-                    ply_searched,
-                );
-                return (best_val, best_move);
-            }
         }
-        let entry_type = if best_val < alpha_p {
-            Type::UpperBound
-        } else {
-            Type::Exact
-        };
-        transposition_table.add(
-            board.get_hash(),
-            best_val,
-            ply_remaining,
-            entry_type,
-            best_move,
-            ply_searched,
-        );
-        // log!(
-        //     best_val,
-        //     if best_move.is_some() {
-        //         best_move.unwrap().to_string()
-        //     } else {
-        //         "none".to_owned()
-        //     }
-        // );
-        return (best_val, best_move);
+
+        //  if our alpha is >= beta, no need to search any further. PRUNE!
+        if alpha >= beta {
+            transposition_table.add(
+                board_with_move.get_hash(),
+                evaluation,
+                ply_remaining,
+                Type::LowerBound,
+                best_move,
+                ply_searched,
+            );
+            return (best_val, best_move);
+        }
     }
+    let entry_type = if best_val < alpha_p {
+        Type::UpperBound
+    } else {
+        Type::Exact
+    };
+    transposition_table.add(
+        board.get_hash(),
+        best_val,
+        ply_remaining,
+        entry_type,
+        best_move,
+        ply_searched,
+    );
+    return (best_val, best_move);
 }
 
 pub fn choose_move(board: &Board, move_ply: u32, is_white: bool) -> Option<ChessMove> {
@@ -210,19 +165,8 @@ pub fn choose_move(board: &Board, move_ply: u32, is_white: bool) -> Option<Chess
             move_ply,
         );
     }
-    // let mut transposition_table = TranspositionTable::new();
-    // let (eval, ai_move) = search(
-    //     board,
-    //     &mut transposition_table,
-    //     MAX_DEPTH,
-    //     0,
-    //     is_white,
-    //     -CHECKMATE_EVAL,
-    //     CHECKMATE_EVAL,
-    //     move_ply,
-    // );
-
     log!(eval);
+
     if ai_move.is_none() {
         log!("I can't find a good move to save me...");
         return MoveGen::new_legal(board).next();
