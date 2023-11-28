@@ -121,6 +121,7 @@ pub fn board() -> Html {
     // let game = use_state(|| Game::from_str("2k5/8/7K/8/8/6q1/1b6/n3b3 b - - 0 1").unwrap());
     // let game = use_state(|| Game::from_str("5r2/5pk1/5p2/7K/6P1/7P/1bn5/8 w - - 0 1").unwrap());
     // let game = use_state(|| Game::from_str("5r2/5pk1/5p2/7K/6P1/2n4P/8/8 w - - 0 1").unwrap());
+    // let game = use_state(|| Game::from_str("8/8/3k4/2p5/2p5/7p/6r1/4K3 w - - 0 1").unwrap());
 
     // M5 works :O
     let game = use_state(|| {

@@ -61,9 +61,9 @@ fn search(
     if ply_remaining == 0 || board.status() != BoardStatus::Ongoing {
         // if on 0 depth but game is ongoing, then do quinescent search
         let evaluation = if board.status() == BoardStatus::Checkmate && maximizing_player {
-            -CHECKMATE_EVAL
+            -CHECKMATE_EVAL + ply_searched as i32
         } else if board.status() == BoardStatus::Checkmate {
-            CHECKMATE_EVAL
+            CHECKMATE_EVAL - ply_searched as i32
         } else if board.status() == BoardStatus::Stalemate {
             0
         } else {
@@ -83,11 +83,13 @@ fn search(
     /* Order moves first by looking at checks, then captures, then the remaining moves */
     let moves: Vec<ChessMove> = order_moves(MoveGen::new_legal(board).collect(), board);
 
-    /* If we are the maximzing player (i.e. white), get the move with the maximum evaluation */
-    /* If we are the minimizing player (i.e. black), get the move with the minimum evaluation */
     let mut best_val = if maximizing_player {
+        /* If we are the maximzing player (i.e. white), we want to get the move with the maximum evaluation,
+        so start with the minimum evaluation */
         -CHECKMATE_EVAL
     } else {
+        /* If we are the minimizing player (i.e. black), we want to get the move with the minimum evaluation,
+        so start with the maximum evaluation */
         CHECKMATE_EVAL
     };
     let mut best_move = None;
