@@ -29,7 +29,7 @@ fn search(
     }
 
     /* 2. Either we have reached 0 depth or our game finished */
-    if ply_remaining == 0 || board.status() != BoardStatus::Ongoing {
+    if ply_remaining <= 0 || board.status() != BoardStatus::Ongoing {
         // if on 0 depth but game is ongoing, then do quinescent search
         let evaluation = if board.status() == BoardStatus::Checkmate && maximizing_player {
             -CHECKMATE_EVAL + ply_searched as i32
@@ -77,19 +77,23 @@ fn search(
     };
     let mut best_move = None;
 
-    for legal_move in moves {
-        let board_with_move = board.make_move_new(legal_move);
+    for (i, legal_move) in moves.iter().enumerate() {
+        let board_with_move = board.make_move_new(*legal_move);
         let mut curr_extension: u8 = 0;
         // search extensions extend the search whenever our move checked the opponent's king (we want to
         // look deeper into check moves since there are less possible responses by opponent so we can afford to go deeper)
         if board_with_move.checkers().popcnt() > 0 && num_extensions < MAX_EXTENSIONS {
             curr_extension = 1;
         }
+        // if i >= 4, then we are towards the middle of our ordered-move list. as a result, we have said that these moves are
+        // less likely to be good moves since they were ordered less, so reduce the search depth for these branches
+        let search_minimization = if i >= 4 { 1 } else { 0 };
+
         let evaluation = search(
             &board_with_move,
             transposition_table,
             move_orderer,
-            ply_remaining - 1 + curr_extension,
+            ply_remaining - 1 + curr_extension - search_minimization,
             ply_searched + 1,
             num_extensions + curr_extension,
             alpha,
@@ -101,13 +105,13 @@ fn search(
         if maximizing_player {
             if evaluation > best_val {
                 best_val = evaluation;
-                best_move = Some(legal_move);
+                best_move = Some(*legal_move);
             }
             alpha = i32::max(alpha, evaluation);
         } else {
             if evaluation < best_val {
                 best_val = evaluation;
-                best_move = Some(legal_move);
+                best_move = Some(*legal_move);
             }
             beta = i32::min(beta, evaluation);
         }
@@ -131,14 +135,14 @@ fn search(
                 .is_some();
 
             if !is_capture_move {
-                move_orderer.add_killer_move(legal_move, ply_searched);
+                move_orderer.add_killer_move(*legal_move, ply_searched);
                 // if there is a cutoff earlier in the search tree, then the ply_remaining will be greater
                 // also, an earlier cutoff means an obviously bad move such as an opponent blundering a queen. because of this,
                 // prioritize early cutoffs by squaring the ply_remaining so that history score is weighted more heavily in
                 // favor of early cutoffs than late cutoffs, because a late cutoff could technically be not 100% accurate due to finite
                 // search depth.
                 let history_score = ply_remaining * ply_remaining;
-                move_orderer.add_history(legal_move, maximizing_player, history_score)
+                move_orderer.add_history(*legal_move, maximizing_player, history_score)
             }
 
             return (best_val, best_move);
