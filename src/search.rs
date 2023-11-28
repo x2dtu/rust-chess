@@ -1,5 +1,5 @@
 use crate::{
-    constants::{CHECKMATE_EVAL, MAX_DEPTH},
+    constants::{CHECKMATE_EVAL, MAX_DEPTH, MAX_EXTENSIONS},
     evaluation::board_eval,
     transposition_table::{TranspositionTable, Type},
 };
@@ -41,6 +41,7 @@ fn search(
     transposition_table: &mut TranspositionTable,
     ply_remaining: u8,
     ply_searched: u8,
+    num_extensions: u8,
     maximizing_player: bool,
     alpha_p: i32,
     beta_p: i32,
@@ -96,11 +97,16 @@ fn search(
 
     for legal_move in moves {
         let board_with_move = board.make_move_new(legal_move);
+        let mut curr_extension: u8 = 0;
+        if board_with_move.checkers().popcnt() > 0 && num_extensions < MAX_EXTENSIONS {
+            curr_extension = 1;
+        }
         let evaluation = search(
             &board_with_move,
             transposition_table,
-            ply_remaining - 1,
+            ply_remaining - 1 + curr_extension,
             ply_searched + 1,
+            num_extensions + curr_extension,
             !maximizing_player,
             alpha,
             beta,
@@ -160,6 +166,7 @@ pub fn choose_move(board: &Board, move_ply: u32, is_white: bool) -> Option<Chess
             board,
             &mut transposition_table,
             depth,
+            0,
             0,
             is_white,
             -CHECKMATE_EVAL,

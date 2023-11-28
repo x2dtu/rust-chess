@@ -4,6 +4,8 @@ pub const MAX_DEPTH: u8 = 7;
 
 pub const CHECKMATE_EVAL: i32 = 1_000_000;
 
+pub const MAX_EXTENSIONS: u8 = 2;
+
 pub const PIECES: &'static [Piece] = &[
     Piece::Pawn,
     Piece::Knight,
