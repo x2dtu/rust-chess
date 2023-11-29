@@ -1,21 +1,11 @@
 use crate::constants::{
-    BLACK_PIECE_POSITIONS, CASTLED_BONUS, CHECKMATE_EVAL, ENDGAME_INDEX_START, ENDGAME_PLY,
-    MIDGAME_PLY, NUM_COLUMNS, PIECES, WHITE_PIECE_POSITIONS,
+    BLACK_PIECE_POSITIONS, CASTLED_BONUS, ENDGAME_INDEX_START, ENDGAME_PLY, MIDGAME_PLY,
+    NUM_COLUMNS, PIECES, WHITE_PIECE_POSITIONS,
 };
-use chess::{Board, BoardStatus, CastleRights, Color, Piece, Square};
+use chess::{Board, CastleRights, Color, Piece, Square};
 
 pub fn board_eval(board: &Board, move_ply: u32) -> i32 {
     let color = board.side_to_move();
-    if board.status() == BoardStatus::Checkmate {
-        return if color == Color::White {
-            -CHECKMATE_EVAL
-        } else {
-            CHECKMATE_EVAL
-        };
-    }
-    if board.status() == BoardStatus::Stalemate {
-        return 0;
-    }
     let mut eval = 0;
     let material_count = count_material(board);
     let king_safety = evaluate_king_safety(board, color, move_ply);

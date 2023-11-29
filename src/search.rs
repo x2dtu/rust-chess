@@ -80,7 +80,7 @@ fn search(
         }
         // if i >= 4, then we are towards the middle of our ordered-move list. as a result, we have said that these moves are
         // less likely to be good moves since they were ordered less, so reduce the search depth for these branches
-        let search_minimization = if i >= 4 { 1 } else { 0 };
+        let search_minimization = if i >= 3 && ply_remaining > 1 { 1 } else { 0 };
 
         let evaluation = search(
             &board_with_move,
@@ -165,6 +165,7 @@ fn quiescence_search(
     ply_searched: u8,
 ) -> i32 {
     let evaluation = board_eval(board, 1_______________________1);
+    return evaluation;
     if evaluation >= beta {
         return beta; // cutoff - opposing player will not go down this path
     }
