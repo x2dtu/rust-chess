@@ -117,7 +117,7 @@ fn parse_board(board: &Board) -> Vec<Option<&str>> {
 
 #[function_component(BoardComp)]
 pub fn board() -> Html {
-    // let game = use_state(|| Game::new());
+    let game = use_state(|| Game::new());
     // let game = use_state(|| Game::from_str("2k5/8/7K/8/8/6q1/1b6/n3b3 b - - 0 1").unwrap());
     // let game = use_state(|| Game::from_str("5r2/5pk1/5p2/7K/6P1/7P/1bn5/8 w - - 0 1").unwrap());
     // let game = use_state(|| Game::from_str("5r2/5pk1/5p2/7K/6P1/2n4P/8/8 w - - 0 1").unwrap());
@@ -127,9 +127,6 @@ pub fn board() -> Html {
     // let game = use_state(|| {
     //     Game::from_str("6k1/3b3r/1p1p4/p1n2p2/1PPNpP1q/P3Q1p1/1R1RB1P1/5K2 b - - 0 1").unwrap()
     // });
-    let game = use_state(|| {
-        Game::from_str("6k1/3b3r/1p1p4/p1n2p2/1PPNpP1q/P3Q1p1/1R1RB1P1/4K3 w - - 0 1").unwrap()
-    });
 
     // let game = use_state(|| {
     //     Game::from_str("4rr2/1p4bk/2p3pn/B3n2b/P4N1q/1P5P/6PK/1BQ1RR2 b - - 1 31").unwrap()

@@ -7,10 +7,10 @@ use chess::{Board, CastleRights, Color, Piece, Square};
 pub fn board_eval(board: &Board, move_ply: u32) -> i32 {
     let color = board.side_to_move();
     let mut eval = 0;
-    let material_count = count_material(board);
+    let material_count = count_material(board) * 2;
     let king_safety = evaluate_king_safety(board, color, move_ply);
     let castle_status = can_castle(board, color, move_ply);
-    let piece_positions = piece_positions(board, color, move_ply);
+    let piece_positions = piece_positions(board, color, move_ply) * 2;
     eval += material_count + king_safety + castle_status + piece_positions;
 
     return eval as i32;
