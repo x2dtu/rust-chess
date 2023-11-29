@@ -51,12 +51,11 @@ impl MoveOrderer {
         &self,
         moves: Vec<ChessMove>,
         board: &Board,
-        in_quiescence: bool,
         ply_searched: u8,
     ) -> Vec<ChessMove> {
         let mut scored_moves: Vec<(ChessMove, i32)> = moves
             .iter()
-            .map(|&m| (m, self.score(m, board, in_quiescence, ply_searched)))
+            .map(|&m| (m, self.score(m, board, ply_searched)))
             .collect();
 
         // sort based on the precomputed scores
@@ -66,13 +65,7 @@ impl MoveOrderer {
         return scored_moves.into_iter().map(|(m, _)| m).collect();
     }
 
-    fn score(
-        &self,
-        chess_move: ChessMove,
-        board: &Board,
-        in_quiescence: bool,
-        ply_searched: u8,
-    ) -> i32 {
+    fn score(&self, chess_move: ChessMove, board: &Board, ply_searched: u8) -> i32 {
         let board_with_move = board.make_move_new(chess_move);
         let dest_square = chess_move.get_dest();
         let source_square = chess_move.get_source();
@@ -131,9 +124,8 @@ impl MoveOrderer {
             let index = ply_searched as usize;
             // if we aren't a capture move or from the quiescence search which was formed from an end-search capture sequence,
             // then we may be a killer move. Killer moves are moves which cause an alpha-beta cutoff
-            let is_killer_move = !in_quiescence
-                && index < MAX_KILLER_MOVE_PLY
-                && self.killer_moves[index].contains_move(chess_move);
+            let is_killer_move =
+                index < MAX_KILLER_MOVE_PLY && self.killer_moves[index].contains_move(chess_move);
 
             if is_killer_move {
                 score += KILLER_BONUS;

@@ -38,7 +38,7 @@ fn search(
         } else if board.status() == BoardStatus::Stalemate {
             0
         } else {
-            -quiescence_search(board, alpha, beta, move_orderer, ply_searched)
+            quiescence_search(board, alpha, beta, move_orderer, ply_searched)
         };
         transposition_table.add(
             board.get_hash(),
@@ -52,12 +52,8 @@ fn search(
     }
     /* Generate all the legal moves and iterate over them */
     /* Order moves first by looking at checks, then captures, then the remaining moves */
-    let moves: Vec<ChessMove> = move_orderer.order_moves(
-        MoveGen::new_legal(board).collect(),
-        board,
-        false, // we aren't in quiescence search
-        ply_searched,
-    );
+    let moves: Vec<ChessMove> =
+        move_orderer.order_moves(MoveGen::new_legal(board).collect(), board, ply_searched);
 
     let mut best_val = if maximizing_player {
         /* If we are the maximzing player (i.e. white), we want to get the move with the maximum evaluation,
@@ -175,15 +171,10 @@ fn quiescence_search(
     let mut moves_iter = MoveGen::new_legal(board);
     let targets = board.color_combined(!board.side_to_move());
     moves_iter.set_iterator_mask(*targets);
-    let moves: Vec<ChessMove> = move_orderer.order_moves(
-        moves_iter.collect(),
-        board,
-        true, // we are in quiescence search
-        ply_searched,
-    );
+    let moves: Vec<ChessMove> = move_orderer.order_moves(moves_iter.collect(), board, ply_searched);
     for capture_move in moves {
         let board_with_capture_move = board.make_move_new(capture_move);
-        let evaluation = -quiescence_search(
+        let evaluation = quiescence_search(
             &board_with_capture_move,
             -beta,
             -alpha,

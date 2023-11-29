@@ -1,10 +1,10 @@
 use chess::Piece;
 
-pub const MAX_DEPTH: u8 = 5;
+pub const MAX_DEPTH: u8 = 8;
 
 pub const CHECKMATE_EVAL: i32 = 1_000_000;
 
-pub const MAX_EXTENSIONS: u8 = 2;
+pub const MAX_EXTENSIONS: u8 = 3;
 
 pub const PIECES: &'static [Piece] = &[
     Piece::Pawn,
