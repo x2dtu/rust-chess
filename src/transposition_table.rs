@@ -39,7 +39,7 @@ pub struct TranspositionTable {
 impl TranspositionTable {
     pub fn new() -> TranspositionTable {
         TranspositionTable {
-            tt: CacheTable::new(65536, Entry::default()),
+            tt: CacheTable::new(32768, Entry::default()),
         }
     }
     pub fn get(

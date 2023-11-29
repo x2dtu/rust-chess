@@ -66,7 +66,7 @@ fn search(
         } else if board.status() == BoardStatus::Stalemate {
             0
         } else {
-            quiescence_search(board, alpha, beta, !maximizing_player)
+            -quiescence_search(board, alpha, beta)
         };
         transposition_table.add(
             board.get_hash(),
@@ -155,8 +155,8 @@ fn search(
     return (best_val, best_move);
 }
 
-fn quiescence_search(board: &Board, mut alpha: i32, beta: i32, maximizing_player: bool) -> i32 {
-    let evaluation = board_eval(board, maximizing_player, 1_______________________1);
+fn quiescence_search(board: &Board, mut alpha: i32, beta: i32) -> i32 {
+    let evaluation = board_eval(board, 1_______________________1);
     if evaluation >= beta {
         return beta; // cutoff - opposing player will not go down this path
     }
@@ -168,9 +168,7 @@ fn quiescence_search(board: &Board, mut alpha: i32, beta: i32, maximizing_player
     moves.set_iterator_mask(*targets);
     for capture_move in moves {
         let board_with_capture_move = board.make_move_new(capture_move);
-        let sign = if maximizing_player { 1 } else { -1 };
-        let evaluation =
-            quiescence_search(&board_with_capture_move, alpha, beta, !maximizing_player) * sign;
+        let evaluation = -quiescence_search(&board_with_capture_move, -beta, -alpha);
         if evaluation >= beta {
             return beta; // cutoff - opposing player will not go down this path
         }

@@ -4,12 +4,8 @@ use crate::constants::{
 };
 use chess::{Board, BoardStatus, CastleRights, Color, Piece, Square};
 
-pub fn board_eval(board: &Board, maximizing_player: bool, move_ply: u32) -> i32 {
-    let color = if maximizing_player {
-        Color::White
-    } else {
-        Color::Black
-    };
+pub fn board_eval(board: &Board, move_ply: u32) -> i32 {
+    let color = board.side_to_move();
     if board.status() == BoardStatus::Checkmate {
         return if color == Color::White {
             -CHECKMATE_EVAL
