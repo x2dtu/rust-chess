@@ -28,7 +28,7 @@ fn count_material(board: &Board) -> i16 {
     material
 }
 
-fn get_count_of_piece(piece: Piece) -> u32 {
+pub fn get_count_of_piece(piece: Piece) -> u32 {
     match piece {
         Piece::Pawn => 100,
         Piece::Knight => 300,

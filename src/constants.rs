@@ -1,6 +1,6 @@
 use chess::Piece;
 
-pub const MAX_DEPTH: u8 = 7;
+pub const MAX_DEPTH: u8 = 5;
 
 pub const CHECKMATE_EVAL: i32 = 1_000_000;
 

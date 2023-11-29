@@ -1,6 +1,16 @@
-use chess::{Board, ChessMove, Color, Square, NUM_SQUARES};
+use chess::{BitBoard, Board, ChessMove, Color, Square, NUM_SQUARES};
 
-use crate::constants::MAX_KILLER_MOVE_PLY;
+use crate::{constants::MAX_KILLER_MOVE_PLY, evaluation::get_count_of_piece};
+
+const CHECK_BONUS: i32 = 250;
+
+const PROMOTION_BONUS: i32 = 800;
+
+const KILLER_BONUS: i32 = 400;
+
+const GOOD_CAPTURE_BONUS: i32 = 600;
+
+const BAD_CAPTURE_BONUS: i32 = 200;
 
 #[derive(Default, Clone, Copy)]
 pub struct KillerMoveEntry {
@@ -64,23 +74,59 @@ impl MoveOrderer {
         ply_searched: u8,
     ) -> i32 {
         let board_with_move = board.make_move_new(chess_move);
+        let dest_square = chess_move.get_dest();
+        let source_square = chess_move.get_source();
+
         let mut score: i32 = 0;
+
+        let our_piece = board.piece_on(source_square).unwrap();
+
         if board_with_move.checkers().popcnt() > 0 {
             // then this move is a checking move
-            score += 150;
+            score += CHECK_BONUS;
         }
 
-        let dest_square = chess_move.get_dest();
-        let is_capture_move = board
-            .piece_on(Square::make_square(
-                dest_square.get_rank(),
-                dest_square.get_file(),
-            ))
-            .is_some();
+        if chess_move.get_promotion().is_some() {
+            score += PROMOTION_BONUS;
+        }
 
-        if is_capture_move {
+        let opponent_can_capture = bb_contains(
+            board_with_move.color_combined(board_with_move.side_to_move()),
+            dest_square,
+        );
+
+        /* Figure out if our move is a capture or not */
+        let en_passant_square = board.en_passant();
+        let piece_at_dest = board.piece_on(dest_square);
+
+        let captured_piece_option = if piece_at_dest.is_some() {
+            piece_at_dest
+        } else if en_passant_square.is_some()
+            && board.piece_on(en_passant_square.unwrap()).is_some()
+        {
+            board.piece_on(en_passant_square.unwrap())
+        } else {
+            None
+        };
+
+        if let Some(captured_piece) = captured_piece_option {
             // then this move is a capture move
-            score += 200;
+
+            let captured_piece_value = get_count_of_piece(captured_piece);
+            let our_piece_value = get_count_of_piece(our_piece);
+            let difference = our_piece_value as i32 - captured_piece_value as i32;
+            if opponent_can_capture {
+                // then opponent can recapture us
+                score += if difference > 0 {
+                    GOOD_CAPTURE_BONUS
+                } else {
+                    BAD_CAPTURE_BONUS
+                } + difference;
+            } else {
+                score += GOOD_CAPTURE_BONUS + difference;
+            }
+
+            // let our_piece = score += 200;
         } else {
             let index = ply_searched as usize;
             // if we aren't a capture move or from the quiescence search which was formed from an end-search capture sequence,
@@ -90,7 +136,7 @@ impl MoveOrderer {
                 && self.killer_moves[index].contains_move(chess_move);
 
             if is_killer_move {
-                score += 400;
+                score += KILLER_BONUS;
             }
             let player_dim: usize = if board.side_to_move() == Color::White {
                 0
@@ -102,6 +148,11 @@ impl MoveOrderer {
             score += self.history[chess_move.get_source().to_index()]
                 [chess_move.get_dest().to_index()][player_dim] as i32;
         }
+
+        if opponent_can_capture {
+            score -= 25;
+        }
+
         return score;
     }
 
@@ -121,4 +172,8 @@ impl MoveOrderer {
         self.history[chess_move.get_source().to_index()][chess_move.get_dest().to_index()]
             [player_dim] = score;
     }
+}
+
+pub fn bb_contains(bb: &BitBoard, target_square: Square) -> bool {
+    (bb & BitBoard::from_square(target_square)).popcnt() > 0
 }
