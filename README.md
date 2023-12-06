@@ -1,74 +1,27 @@
-# Yew Trunk Template
+# Rust Chess AI & Game
 
-This is a fairly minimal template for a Yew app that's built with [Trunk].
+Welcome! This is a chess game made with Rust in which you can play against an AI. The Rust program is compiled to web assembly and is running [on this website](https://x2dtu.github.io/rust-chess/) where you can play against the AI yourself! I hope you have fun!
 
-## Usage
+The frontend is made using Yew, a rust framework made for creating reliable and efficient web applications. Yew is modeled after React.js which makes it easier than other frameworks to pick up and get started. 
 
-For a more thorough explanation of Trunk and its features, please head over to the [repository][trunk].
+The AI uses the following features in order to play at about a level of 1700 elo[^1]:
+* Minimax base search algorithm
+* Alpha-beta pruning
+* Sophisticated move ordering which boosts
+  * Checks
+  * Captures (with better captures being boosted more over worse captures)
+  * 'Killer' moves
+  * Historical, early killer moves over later ones
+* Sophisticated evaluation function taking into account
+  * Material counts for both players
+  * King safety
+  * Optimal piece locations
+  * Castling rights
+* Search extensions
+* Quiescence searching
+* Transposition table
+* Opening book preparation
 
-### Installation
+I hope you like my chess AI. More features are planned for the future, but if you have any suggestions, feel free to let me know by either making an issue on this repository or emailing me at michaelga<at>vt<dot>edu.
 
-If you don't already have it installed, it's time to install Rust: <https://www.rust-lang.org/tools/install>.
-The rest of this guide assumes a typical Rust installation which contains both `rustup` and Cargo.
-
-To compile Rust to WASM, we need to have the `wasm32-unknown-unknown` target installed.
-If you don't already have it, install it with the following command:
-
-```bash
-rustup target add wasm32-unknown-unknown
-```
-
-Now that we have our basics covered, it's time to install the star of the show: [Trunk].
-Simply run the following command to install it:
-
-```bash
-cargo install trunk wasm-bindgen-cli
-```
-
-That's it, we're done!
-
-### Running
-
-```bash
-trunk serve
-```
-
-Rebuilds the app whenever a change is detected and runs a local server to host it.
-
-There's also the `trunk watch` command which does the same thing but without hosting it.
-
-### Release
-
-```bash
-trunk build --release
-```
-
-This builds the app in release mode similar to `cargo build --release`.
-You can also pass the `--release` flag to `trunk serve` if you need to get every last drop of performance.
-
-Unless overwritten, the output will be located in the `dist` directory.
-
-## Using this template
-
-There are a few things you have to adjust when adopting this template.
-
-### Remove example code
-
-The code in [src/main.rs](src/main.rs) specific to the example is limited to only the `view` method.
-There is, however, a fair bit of Sass in [index.scss](index.scss) you can remove.
-
-### Update metadata
-
-Update the `name`, `version`, `description` and `repository` fields in the [Cargo.toml](Cargo.toml) file.
-The [index.html](index.html) file also contains a `<title>` tag that needs updating.
-
-Finally, you should update this very `README` file to be about your app.
-
-### License
-
-The template ships with both the Apache and MIT license.
-If you don't want to have your app dual licensed, just remove one (or both) of the files and update the `license` field in `Cargo.toml`.
-
-There are two empty spaces in the MIT license you need to fill out: `` and `michaelga <michaelga@vt.edu>`.
-
-[trunk]: https://github.com/thedodd/trunk
+[^1]: This chess AI was pitted up against chess.com's computer players. In my testing, it was able to beat bots consistently up to 1600 elo, then was a bit more even with wins and losses at 1700 elo, and consistently lost to the 1800 elo bot. 1700 elo makes this AI in the 98th percentile of players according to https://www.chess.com/leaderboard/live/rapid 
